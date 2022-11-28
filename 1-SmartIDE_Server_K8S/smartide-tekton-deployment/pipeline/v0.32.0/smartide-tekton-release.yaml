@@ -1817,17 +1817,17 @@ spec:
       serviceAccountName: tekton-pipelines-controller
       containers:
         - name: tekton-pipelines-controller
-          image: registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:v0.32.0
+          image: easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:v0.32.0
           args: [
             # These images are built on-demand by `ko resolve` and are replaced
             # by image references by digest.
-            "-kubeconfig-writer-image", "registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:v0.32.0", "-git-image", "registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:v0.32.0", "-entrypoint-image", "registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:v0.32.0", "-nop-image", "registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:v0.32.0", "-imagedigest-exporter-image", "registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:v0.32.0", "-pr-image", "registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:v0.32.0",
+            "-kubeconfig-writer-image", "easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:v0.32.0", "-git-image", "easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:v0.32.0", "-entrypoint-image", "easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:v0.32.0", "-nop-image", "easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:v0.32.0", "-imagedigest-exporter-image", "easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:v0.32.0", "-pr-image", "easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:v0.32.0",
             # This is gcr.io/google.com/cloudsdktool/cloud-sdk:302.0.0-slim
-            "-gsutil-image", "registry.cn-hangzhou.aliyuncs.com/smartide/cloudsdktool-cloud-sdk",
+            "-gsutil-image", "easzlab.io.local:5000/smartide/cloudsdktool-cloud-sdk",
             # The shell image must be root in order to create directories and copy files to PVCs.
             # gcr.io/distroless/base:debug as of October 21, 2021
             # image shall not contains tag, so it will be supported on a runtime like cri-o
-            "-shell-image", "registry.cn-hangzhou.aliyuncs.com/smartide/distroless-base",
+            "-shell-image", "easzlab.io.local:5000/smartide/distroless-base",
             # for script mode to work with windows we need a powershell image
             # pinning to nanoserver tag as of July 15 2021
             "-shell-image-win", "mcr.microsoft.com/powershell:nanoserver@sha256:b6d5ff841b78bdf2dfed7550000fd4f3437385b8fa686ec0f010be24777654d6"]
@@ -2069,7 +2069,7 @@ spec:
         - name: webhook
           # This is the Go import path for the binary that is containerized
           # and substituted here.
-          image: registry.cn-hangzhou.aliyuncs.com/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:v0.32.0
+          image: easzlab.io.local:5000/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:v0.32.0
           # Resource request required for autoscaler to take any action for a metric
           resources:
             requests:
