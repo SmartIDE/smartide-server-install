@@ -158,7 +158,8 @@ function get_smartide_tekton_manifests() {
     https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/task-smartide-cli-release.yaml
   wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
     https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/pipeline-smartide-cli.yaml
-
+  wget -P $tektonManifestsPath \
+    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
 }
 
 
