@@ -155,7 +155,7 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "CDPRSXd:e:k:m:p:z:" OPTION; do
+  while getopts "TM" OPTION; do
       case "$OPTION" in
         T)
           ACTION="download_all"
