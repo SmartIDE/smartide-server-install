@@ -23,7 +23,7 @@ function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
   cat <<EOF
   option:
-    -D         download default binaries/images into "$BASE/down/smartide"
+    -T         download tekton images into "$BASE/down/smartide"
 EOF
 }
 
@@ -157,7 +157,7 @@ function main() {
   ACTION=""
   while getopts "CDPRSXd:e:k:m:p:z:" OPTION; do
       case "$OPTION" in
-        D)
+        T)
           ACTION="download_all"
           ;;
         ?)
