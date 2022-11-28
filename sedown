@@ -1,0 +1,178 @@
+#!/bin/bash
+#--------------------------------------------------
+# This script is used for: 
+# 1. to download and import smartide images
+# @author:   jilibin
+# @usage:    ./sedown
+#--------------------------------------------------
+set -o nounset
+set -o errexit
+#set -o xtrace
+
+# Docker Registry
+dockerRegistry=easzlab.io.local:5000
+
+# smartide image
+smartideDockerhub=registry.cn-hangzhou.aliyuncs.com/smartide
+tektonPipelineVer=v0.32.0
+tektonTriggersVer=v0.18.0
+tektonDashboardVer=v0.23.0
+
+
+function usage() {
+  echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
+  cat <<EOF
+  option:
+    -D         download default binaries/images into "$BASE/down/smartide"
+EOF
+}
+
+function logger() {
+  TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S')
+  case "$1" in
+    debug)
+      echo -e "$TIMESTAMP \033[36mDEBUG\033[0m $2"
+      ;;
+    info)
+      echo -e "$TIMESTAMP \033[32mINFO\033[0m $2"
+      ;;
+    warn)
+      echo -e "$TIMESTAMP \033[33mWARN\033[0m $2"
+      ;;
+    error)
+      echo -e "$TIMESTAMP \033[31mERROR\033[0m $2"
+      ;;
+    *)
+      ;;
+  esac
+}
+
+function get_smartide_tekton_images() {
+  logger info "download smartide images, then upload to the local registry"
+  mkdir -p "$BASE/down"
+
+  # tekton-pipeline
+  if [[ ! -f "$imageDir/tekton-pipeline_$tektonPipelineVer.tar" ]];then
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" && \
+    docker pull "$smartideDockerhub/cloudsdktool-cloud-sdk" && \
+    docker pull "$smartideDockerhub/distroless-base" && \
+    docker save -o "$imageDir/tekton-pipeline_$tektonPipelineVer.tar" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" \
+      "$smartideDockerhub/cloudsdktool-cloud-sdk" \
+      "$smartideDockerhub/distroless-base"
+  else
+    docker load -i "$imageDir/tekton-pipeline_$tektonPipelineVer.tar"
+  fi
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
+  docker tag "$smartideDockerhub/cloudsdktool-cloud-sdk" "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
+  docker push "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
+  docker tag "$smartideDockerhub/distroless-base" "$dockerRegistry/smartide/distroless-base"
+  docker push "$dockerRegistry/smartide/distroless-base"
+
+
+  # tekton-triggers
+  if [[ ! -f "$imageDir/triggers_$tektonTriggersVer.tar" ]];then
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" && \
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" && \
+    docker save -o "$imageDir/tekton-triggers_$tektonTriggersVer.tar" \
+      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" \
+      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+  else
+    docker load -i "$imageDir/tekton-triggers_$tektonTriggersVer.tar"
+  fi
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+
+  # tekton-dashboard
+  if [[ ! -f "$imageDir/tekton-dashboard_$tektonDashboardVer.tar" ]];then
+    docker pull "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" && \
+    docker save -o "$imageDir/tekton-dashboard_$tektonDashboardVer.tar" \
+      "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+  else
+    docker load -i "$imageDir/tekton-dashboard_$tektonDashboardVer.tar"
+  fi
+  docker tag "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+}
+
+
+
+
+function download_all() {
+  get_smartide_tekton_images
+}
+
+
+### Main Lines ##################################################
+function main() {
+  BASE="/etc/smartide"
+  imageDir="$BASE/down"
+
+  # check if use bash shell
+  readlink /proc/$$/exe|grep -q "bash" || { logger error "you should use bash shell, not sh"; exit 1; }
+  # check if use with root
+  [[ "$EUID" -ne 0 ]] && { logger error "you should run this script as root"; exit 1; }
+  
+  [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
+  
+  ACTION=""
+  while getopts "CDPRSXd:e:k:m:p:z:" OPTION; do
+      case "$OPTION" in
+        D)
+          ACTION="download_all"
+          ;;
+        ?)
+          usage
+          exit 1
+          ;;
+      esac
+  done
+  
+  [[ "$ACTION" == "" ]] && { logger error "illegal option"; usage; exit 1; }
+  
+  # excute cmd "$ACTION" 
+  logger info "Action begin: $ACTION"
+  ${ACTION} || { logger error "Action failed: $ACTION"; return 1; }
+  logger info "Action successed: $ACTION"
+}
+
+main "$@"
