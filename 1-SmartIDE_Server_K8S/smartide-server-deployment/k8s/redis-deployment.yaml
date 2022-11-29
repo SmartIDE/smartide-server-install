@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gva-redis
+  labels:
+    app: gva-redis
+spec:
+  ports:
+    - name: "6379"
+      port: 6379
+      targetPort: 6379
+  selector:
+    app: gva-redis
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gva-redis
+  labels:
+    app: gva-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gva-redis
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: gva-redis
+    spec:
+      containers:
+        - image: easzlab.io.local:5000/smartide/redis:6.0.16
+          name: gva-redis
+          ports:
+            - containerPort: 6379
+          resources: {}
+      restartPolicy: Always
+

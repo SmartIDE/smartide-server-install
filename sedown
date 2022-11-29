@@ -10,13 +10,17 @@ set -o errexit
 #set -o xtrace
 
 # Docker Registry
+smartideDockerhub=registry.cn-hangzhou.aliyuncs.com/smartide
 dockerRegistry=easzlab.io.local:5000
 
-# smartide image
-smartideDockerhub=registry.cn-hangzhou.aliyuncs.com/smartide
+# smartide tekton image
 tektonPipelineVer=v0.32.0
 tektonTriggersVer=v0.18.0
 tektonDashboardVer=v0.23.0
+# smartide server image
+smartideServerVer=6904
+smartideCliVer=6904
+
 
 
 function usage() {
@@ -166,6 +170,77 @@ function get_smartide_tekton_manifests() {
   fi
 }
 
+function get_smartide_tekton_images() {
+  mkdir -p "$BASE/down"
+  # server
+  logger info "download smartide server images, then upload to the local registry"
+  if [[ ! -f "$imageDir/smartide-server_$smartideServerVer.tar" ]];then
+    docker pull "$smartideDockerhub/smartide-api:$smartideServerVer" && \
+    docker pull "$smartideDockerhub/smartide-web:$smartideServerVer" && \
+    docker save -o "$imageDir/smartide-server_$smartideServerVer.tar" \
+      "$smartideDockerhub/smartide-api:$smartideServerVer" \
+      "$smartideDockerhub/smartide-web:$smartideServerVer"
+  else
+    docker load -i "$imageDir/smartide-server_$smartideServerVer.tar"
+  fi
+  docker tag "$smartideDockerhub/smartide-api:$smartideServerVer" "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
+  docker push "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
+  docker tag "$smartideDockerhub/smartide-web:$smartideServerVer" "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
+  docker push "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
+  
+  # server dependencies: phpmyadmin，mysql，busybox，redis
+  logger info "download smartide server dependencies images, then upload to the local registry"
+  if [[ ! -f "$imageDir/smartide-server-dependencies.tar" ]];then
+    docker pull "$smartideDockerhub/phpmyadmin:5.1.1" && \
+    docker pull "$smartideDockerhub/mysql:8.0.29" && \
+    docker pull "$smartideDockerhub/busybox:1.29.3" && \
+    docker pull "$smartideDockerhub/redis:6.0.16" && \
+    docker save -o "$imageDir/smartide-server-dependencies.tar" \
+      "$smartideDockerhub/phpmyadmin:5.1.1" \
+      "$smartideDockerhub/mysql:8.0.29" \
+      "$smartideDockerhub/busybox:1.29.3" \
+      "$smartideDockerhub/redis:6.0.16"
+  else
+    docker load -i "$imageDir/smartide-server-dependencies.tar"
+  fi
+  docker tag "$smartideDockerhub/phpmyadmin:5.1.1" "$dockerRegistry/smartide/phpmyadmin:5.1.1"
+  docker push "$dockerRegistry/smartide/phpmyadmin:5.1.1"
+  docker tag "$smartideDockerhub/mysql:8.0.29" "$dockerRegistry/smartide/mysql:8.0.29"
+  docker push "$dockerRegistry/smartide/mysql:8.0.29"
+  docker tag "$smartideDockerhub/busybox:1.29.3" "$dockerRegistry/smartide/busybox:1.29.3"
+  docker push "$dockerRegistry/smartide/busybox:1.29.3"
+  docker tag "$smartideDockerhub/redis:6.0.16" "$dockerRegistry/smartide/redis:6.0.16"
+  docker push "$dockerRegistry/smartide/redis:6.0.16"
+}
+
+function get_smartide_server_manifests() {
+  logger info "download smartide server manifests"
+  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
+    mkdir -p "$BASE/manifests/smartide-server-deployment"
+    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-server-configmap.yaml
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-server-deployment.yaml
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-web-configmap.yaml
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-web-deploymemt.yaml
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/myadmin-deployment.yaml
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/mysql-deployment.yaml
+    wget -P $tektonManifestsPath/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/redis-deployment.yaml
+
+    wget -P $tektonManifestsPath \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
+    sed -i 's/^INSTALL_SOURCE.*$/INSTALL_SOURCE: "offline"/g' /etc/kubeasz/example/config.yml 
+  else
+    logger info "smartide server manifests are already exists"
+  fi
+}
+
 function get_smartide_sedown() {
   logger info "download smartide sedown"
   if [[ ! -f "$BASE/sedown" ]];then
@@ -179,7 +254,9 @@ function get_smartide_sedown() {
 function download_all() {
   get_smartide_sedown && \
   get_smartide_tekton_images && \
-  get_smartide_tekton_manifests 
+  get_smartide_tekton_manifests && \
+  get_smartide_server_images && \
+  get_smartide_server_manifests
 }
 
 

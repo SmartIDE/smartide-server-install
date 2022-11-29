@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gva-server
+  annotations:
+    flipped-aurora/gin-vue-admin: backend
+    github: "https://github.com/flipped-aurora/gin-vue-admin.git"
+    app.kubernetes.io/version: 0.0.1
+  labels:
+    app: gva-server
+    version: gva-vue3
+spec:
+  selector:
+    app: gva-server
+    version: gva-vue3
+  ports:
+    - port: 8888
+      name: http
+      targetPort: 8888
+  type: ClusterIP
+  # type: LoadBalancer
+  # loadBalancerIP: 20.212.119.152
+  
+#  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gva-server
+  annotations:
+    flipped-aurora/gin-vue-admin: backend
+    github: "https://github.com/flipped-aurora/gin-vue-admin.git"
+    app.kubernetes.io/version: 0.0.1
+  labels:
+    app: gva-server
+    version: gva-vue3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gva-server
+      version: gva-vue3
+  template:
+    metadata:
+      labels:
+        app: gva-server
+        version: gva-vue3
+    spec:
+      containers:
+        - name: gva-server
+          image: easzlab.io.local:5000/smartide/smartide-api:${}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+              name: http
+          volumeMounts:
+            - mountPath: /go/src/github.com/flipped-aurora/gin-vue-admin/server/config.docker.yaml
+              name: config
+              subPath: config.yaml
+            - mountPath: /etc/localtime
+              name: localtime
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 2000Mi
+            requests:
+              cpu: 100m
+              memory: 200Mi
+#          readinessProbe:
+#            httpGet:
+#              path: /ready
+#              port: http
+#            initialDelaySeconds: 20
+#            periodSeconds: 10
+#            successThreshold: 1
+#            failureThreshold: 3
+#          livenessProbe:
+#            httpGet:
+#              path: /health
+#              port: http
+#            initialDelaySeconds: 20
+#            periodSeconds: 10
+#            successThreshold: 1
+#            failureThreshold: 3
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+        - name: config
+          configMap:
+            name: config.yaml

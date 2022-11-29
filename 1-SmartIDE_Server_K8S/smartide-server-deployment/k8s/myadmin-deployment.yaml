@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gva-myadmin
+  labels:
+    app: gva-myadmin
+spec:
+  ports:
+    - name: "8090"
+      port: 8090
+      targetPort: 80
+  selector:
+    app: gva-myadmin
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: gva-myadmin
+  name: gva-myadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gva-myadmin
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: gva-myadmin
+    spec:
+      containers:
+        - env:
+            - name: PMA_HOST
+              value: gva-mysql
+          image: easzlab.io.local:5000/smartide/phpmyadmin:5.1.1
+          name: gva-myadmin
+          ports:
+            - containerPort: 80
+          resources: {}
+      restartPolicy: Always
+status: {}
