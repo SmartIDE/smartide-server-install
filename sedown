@@ -5,7 +5,7 @@
 # @author:   jilibin
 # @usage:    ./sedown
 #--------------------------------------------------
-version=v1.0.2
+version=v1.0.3
 echo "version:$version"
 set -o nounset
 set -o errexit
@@ -20,8 +20,8 @@ tektonPipelineVer=v0.32.0
 tektonTriggersVer=v0.18.0
 tektonDashboardVer=v0.23.0
 # smartide server image
-smartideServerVer=6904
-smartideCliVer=6904
+smartideServerVer=7182
+smartideCliVer=7111
 
 
 
