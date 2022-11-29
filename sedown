@@ -194,7 +194,7 @@ function deploy_smartide_tekton() {
   fi
 }
 
-function get_smartide_tekton_images() {
+function get_smartide_server_images() {
   mkdir -p "$BASE/down"
   # server
   logger info "download smartide server images, then upload to the local registry"
