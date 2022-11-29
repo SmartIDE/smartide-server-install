@@ -242,7 +242,7 @@ function get_smartide_server_manifests() {
   if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
     mkdir -p "$BASE/manifests/smartide-server-deployment/k8s"
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
-    wget -P $tektonManifestsPath/k8s/ \
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-configmap.yaml
     wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-deployment.yaml
