@@ -136,34 +136,48 @@ function get_smartide_tekton_images() {
 
 function get_smartide_tekton_manifests() {
   logger info "download smartide tekton manifests"
-  mkdir -p "$BASE/manifests/smartide-tekton-deployment"
-  tektonManifestsPath="$BASE/manifests/smartide-tekton-deployment"
-  wget -P $tektonManifestsPath/pipeline/v0.32.0 \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/pipeline/v0.32.0/smartide-tekton-release.yaml
-  wget -P $tektonManifestsPath/dashboard/v0.32.0 \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/dashboard/v0.32.0/smartide-tekton-dashboard-release.yaml
-  wget -P $tektonManifestsPath/trigger/v0.18.0 \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/trigger/v0.18.0/smartide-release.yaml
-  wget -P $tektonManifestsPath/trigger/v0.18.0 \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/trigger/v0.18.0/smartide-interceptor.yaml
-  wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger.yaml
-  wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-template.yaml
-  wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-binding.yaml
-  wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-event-listener.yaml
-  wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/task-smartide-cli-release.yaml
-  wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/pipeline-smartide-cli.yaml
-  wget -P $tektonManifestsPath \
-    https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
+  if [[ ! -d "$BASE/manifests/smartide-tekton-deployment" ]];then
+    mkdir -p "$BASE/manifests/smartide-tekton-deployment"
+    tektonManifestsPath="$BASE/manifests/smartide-tekton-deployment"
+    wget -P $tektonManifestsPath/pipeline/v0.32.0 \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/pipeline/v0.32.0/smartide-tekton-release.yaml
+    wget -P $tektonManifestsPath/dashboard/v0.32.0 \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/dashboard/v0.32.0/smartide-tekton-dashboard-release.yaml
+    wget -P $tektonManifestsPath/trigger/v0.18.0 \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/trigger/v0.18.0/smartide-release.yaml
+    wget -P $tektonManifestsPath/trigger/v0.18.0 \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/trigger/v0.18.0/smartide-interceptor.yaml
+    wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger.yaml
+    wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-template.yaml
+    wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-binding.yaml
+    wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-event-listener.yaml
+    wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/task-smartide-cli-release.yaml
+    wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/pipeline-smartide-cli.yaml
+    wget -P $tektonManifestsPath \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
+  else
+    logger info "smartide tekton manifests are already exists"
+  fi
 }
 
+function get_smartide_sedown() {
+  logger info "download smartide sedown"
+  if [[ ! -f "$BASE/sedown" ]];then
+    wget -P "$BASE" \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/sedown
+  else
+    logger info "smartide sedown are already exists"
+  fi
+}
 
 function download_all() {
+  get_smartide_sedown && \
   get_smartide_tekton_images && \
   get_smartide_tekton_manifests 
 }
