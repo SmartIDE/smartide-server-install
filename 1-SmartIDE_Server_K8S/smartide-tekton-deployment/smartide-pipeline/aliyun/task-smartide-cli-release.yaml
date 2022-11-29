@@ -60,7 +60,7 @@ spec:
 
   steps:
     - name: smartide-cli
-      image: easzlab.io.local:5000/smartide/smartide-cli:${smartideCliVer}
+      image: easzlab.io.local:5000/smartide/smartide-cli:{smartideCliVer}
 
       script: |
         #!/bin/bash
