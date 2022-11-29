@@ -27,7 +27,8 @@ function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
   cat <<EOF
   option:
-    -T         download tekton images into "$BASE/down/smartide"
+    -T         download tekton && server images into "$BASE/down/smartide"
+    -I         deploy tekton && server on k8s
 EOF
 }
 
@@ -170,6 +171,29 @@ function get_smartide_tekton_manifests() {
   fi
 }
 
+function deploy_smartide_tekton() {
+  logger info "deploy smartide tekton manifests"
+  if [[ ! -d "$BASE/manifests/smartide-tekton-deployment" ]];then
+    logger error "smartide tekton manifests are not exists"
+  else
+    tektonManifestsPath="$BASE/manifests/smartide-tekton-deployment"
+    sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $tektonManifestsPath`
+    kubectl apply -f $tektonManifestsPath/pipeline/v0.32.0/smartide-tekton-release.yaml
+    kubectl apply -f $tektonManifestsPath/dashboard/v0.32.0/smartide-tekton-dashboard-release.yaml
+    sleep 15
+    kubectl apply -f $tektonManifestsPath/trigger/v0.18.0/smartide-release.yaml
+    kubectl apply -f $tektonManifestsPath/trigger/v0.18.0/smartide-interceptor.yaml
+    sleep 5
+    kubectl apply -f $tektonManifestsPath/smartide-pipeline/aliyun/trigger.yaml
+    kubectl apply -f $tektonManifestsPath/smartide-pipeline/aliyun/trigger-template.yaml
+    kubectl apply -f $tektonManifestsPath/smartide-pipeline/aliyun/trigger-binding.yaml
+    kubectl apply -f $tektonManifestsPath/smartide-pipeline/aliyun/trigger-event-listener.yaml
+    sleep 5
+    kubectl apply -f $tektonManifestsPath/smartide-pipeline/aliyun/task-smartide-cli-release.yaml
+    kubectl apply -f $tektonManifestsPath/smartide-pipeline/aliyun/pipeline-smartide-cli.yaml
+  fi
+}
+
 function get_smartide_tekton_images() {
   mkdir -p "$BASE/down"
   # server
@@ -234,13 +258,27 @@ function get_smartide_server_manifests() {
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/mysql-deployment.yaml
     wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/redis-deployment.yaml
-
     wget -P $serverManifestsPath \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
-    
-
   else
     logger info "smartide server manifests are already exists"
+  fi
+}
+
+function deploy_smartide_server() {
+  logger info "deploy smartide server manifests"
+  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
+    logger error "smartide server manifests are not exists"
+  else
+    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
+    sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $serverManifestsPath`
+    kubectl apply -f $serverManifestsPath/k8s/gva-server-configmap.yaml
+    kubectl apply -f $serverManifestsPath/k8s/gva-server-deployment.yaml
+    kubectl apply -f $serverManifestsPath/k8s/gva-web-configmap.yaml
+    kubectl apply -f $serverManifestsPath/k8s/gva-web-deploymemt.yaml
+    kubectl apply -f $serverManifestsPath/k8s/myadmin-deployment.yaml
+    kubectl apply -f $serverManifestsPath/k8s/mysql-deployment.yaml
+    kubectl apply -f $serverManifestsPath/k8s/redis-deployment.yaml
   fi
 }
 
@@ -262,6 +300,10 @@ function download_all() {
   get_smartide_server_manifests
 }
 
+function deploy_all() {
+  deploy_smartide_tekton && \
+  deploy_smartide_server
+}
 
 ### Main Lines ##################################################
 function main() {
@@ -276,11 +318,14 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "TM" OPTION; do
+  while getopts "TMD" OPTION; do
       case "$OPTION" in
         T)
           ACTION="download_all"
           ;;
+        D)
+          ACTION="deploy_all"
+          ;;        
         ?)
           usage
           exit 1
