@@ -5,6 +5,8 @@
 # @author:   jilibin
 # @usage:    ./sedown
 #--------------------------------------------------
+version=v1.0.0
+echo "version:$version"
 set -o nounset
 set -o errexit
 #set -o xtrace
