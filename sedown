@@ -5,7 +5,7 @@
 # @author:   jilibin
 # @usage:    ./sedown
 #--------------------------------------------------
-version=v1.0.0
+version=v1.0.1
 echo "version:$version"
 set -o nounset
 set -o errexit
@@ -169,7 +169,7 @@ function get_smartide_tekton_manifests() {
     wget -P $tektonManifestsPath \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
   else
-    logger info "smartide tekton manifests are already exists"
+    logger info "smartide tekton manifests are already exists:$BASE/manifests/smartide-tekton-deployment"
   fi
 }
 
