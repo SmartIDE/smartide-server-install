@@ -263,7 +263,7 @@ function get_smartide_server_manifests() {
     wget -P $serverManifestsPath \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
   else
-    logger info "smartide server manifests are already exists"
+    logger info "smartide server manifests are already exists:$BASE/manifests/smartide-server-deployment"
   fi
 }
 
