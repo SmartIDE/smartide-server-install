@@ -220,22 +220,25 @@ function get_smartide_server_manifests() {
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
     wget -P $tektonManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-server-configmap.yaml
-    wget -P $tektonManifestsPath/ \
+    wget -P $serverManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-server-deployment.yaml
-    wget -P $tektonManifestsPath/ \
+    sed -i 's/${smartideServerVer}/$smartideServerVer/g' $serverManifestsPath/gva-server-deployment.yaml
+    wget -P $serverManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-web-configmap.yaml
-    wget -P $tektonManifestsPath/ \
+    wget -P $serverManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/gva-web-deploymemt.yaml
-    wget -P $tektonManifestsPath/ \
+    sed -i 's/${smartideServerVer}/$smartideServerVer/g' $serverManifestsPath/gva-web-deploymemt.yaml
+    wget -P $serverManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/myadmin-deployment.yaml
-    wget -P $tektonManifestsPath/ \
+    wget -P $serverManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/mysql-deployment.yaml
-    wget -P $tektonManifestsPath/ \
+    wget -P $serverManifestsPath/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/redis-deployment.yaml
 
-    wget -P $tektonManifestsPath \
+    wget -P $serverManifestsPath \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
-    sed -i 's/^INSTALL_SOURCE.*$/INSTALL_SOURCE: "offline"/g' /etc/kubeasz/example/config.yml 
+    
+
   else
     logger info "smartide server manifests are already exists"
   fi

@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
         - name: gva-server
-          image: easzlab.io.local:5000/smartide/smartide-api:${}
+          image: easzlab.io.local:5000/smartide/smartide-api:${smartideServerVer}
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8888
