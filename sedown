@@ -216,23 +216,23 @@ function get_smartide_tekton_images() {
 function get_smartide_server_manifests() {
   logger info "download smartide server manifests"
   if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
-    mkdir -p "$BASE/manifests/smartide-server-deployment"
+    mkdir -p "$BASE/manifests/smartide-server-deployment/k8s"
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
-    wget -P $tektonManifestsPath/ \
+    wget -P $tektonManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-configmap.yaml
-    wget -P $serverManifestsPath/ \
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-deployment.yaml
-    sed -i 's/${smartideServerVer}/$smartideServerVer/g' $serverManifestsPath/k8s/gva-server-deployment.yaml
-    wget -P $serverManifestsPath/ \
+    sed -i "s/{smartideServerVer}/$smartideServerVer/g" $serverManifestsPath/k8s/gva-server-deployment.yaml
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-web-configmap.yaml
-    wget -P $serverManifestsPath/ \
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-web-deploymemt.yaml
-    sed -i 's/${smartideServerVer}/$smartideServerVer/g' $serverManifestsPath/k8s/gva-web-deploymemt.yaml
-    wget -P $serverManifestsPath/ \
+    sed -i "s/{smartideServerVer}/$smartideServerVer/g" $serverManifestsPath/k8s/gva-web-deploymemt.yaml
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/myadmin-deployment.yaml
-    wget -P $serverManifestsPath/ \
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/mysql-deployment.yaml
-    wget -P $serverManifestsPath/ \
+    wget -P $serverManifestsPath/k8s/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/redis-deployment.yaml
 
     wget -P $serverManifestsPath \
