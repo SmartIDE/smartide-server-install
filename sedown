@@ -27,8 +27,8 @@ function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
   cat <<EOF
   option:
-    -T         download tekton && server images into "$BASE/down/smartide"
-    -I         deploy tekton && server on k8s
+    -D         download tekton && server images into "$BASE/down/smartide"
+    -K         deploy tekton && server on k8s
 EOF
 }
 
@@ -318,12 +318,12 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "TMD" OPTION; do
+  while getopts "D" OPTION; do
       case "$OPTION" in
-        T)
+        D)
           ACTION="download_all"
           ;;
-        D)
+        K)
           ACTION="deploy_all"
           ;;        
         ?)
