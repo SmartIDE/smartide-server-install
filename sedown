@@ -164,6 +164,7 @@ function get_smartide_tekton_manifests() {
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/trigger-event-listener.yaml
     wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/task-smartide-cli-release.yaml
+    sed -i "s/{smartideCliVer}/$smartideCliVer/g" $tektonManifestsPath/smartide-pipeline/aliyun/task-smartide-cli-release.yaml
     wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/pipeline-smartide-cli.yaml
     wget -P $tektonManifestsPath \
@@ -203,9 +204,11 @@ function get_smartide_server_images() {
   if [[ ! -f "$imageDir/smartide-server_$smartideServerVer.tar" ]];then
     docker pull "$smartideDockerhub/smartide-api:$smartideServerVer" && \
     docker pull "$smartideDockerhub/smartide-web:$smartideServerVer" && \
+    docker pull "$smartideDockerhub/smartide-cli:$smartideCliVer" && \
     docker save -o "$imageDir/smartide-server_$smartideServerVer.tar" \
       "$smartideDockerhub/smartide-api:$smartideServerVer" \
-      "$smartideDockerhub/smartide-web:$smartideServerVer"
+      "$smartideDockerhub/smartide-web:$smartideServerVer" \
+      "$smartideDockerhub/smartide-cli:$smartideCliVer"
   else
     docker load -i "$imageDir/smartide-server_$smartideServerVer.tar"
   fi
@@ -213,6 +216,8 @@ function get_smartide_server_images() {
   docker push "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
   docker tag "$smartideDockerhub/smartide-web:$smartideServerVer" "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
   docker push "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
+  docker tag "$smartideDockerhub/smartide-cli:$smartideCliVer" "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
+  docker push "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
   
   # server dependencies: phpmyadmin，mysql，busybox，redis
   logger info "download smartide server dependencies images, then upload to the local registry"
