@@ -83,27 +83,28 @@ function get_smartide_tekton_images() {
       "$smartideDockerhub/distroless-base"
   else
     docker load -i "$imageDir/tekton-pipeline_$tektonPipelineVer.tar"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
+    docker tag "$smartideDockerhub/cloudsdktool-cloud-sdk" "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
+    docker push "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
+    docker tag "$smartideDockerhub/distroless-base" "$dockerRegistry/smartide/distroless-base"
+    docker push "$dockerRegistry/smartide/distroless-base"
   fi
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
-  docker tag "$smartideDockerhub/cloudsdktool-cloud-sdk" "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
-  docker push "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
-  docker tag "$smartideDockerhub/distroless-base" "$dockerRegistry/smartide/distroless-base"
-  docker push "$dockerRegistry/smartide/distroless-base"
+
 
 
   # tekton-triggers
@@ -119,15 +120,16 @@ function get_smartide_tekton_images() {
       "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
   else
     docker load -i "$imageDir/tekton-triggers_$tektonTriggersVer.tar"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
   fi
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+
 
   # tekton-dashboard
   if [[ ! -f "$imageDir/tekton-dashboard_$tektonDashboardVer.tar" ]];then
@@ -136,9 +138,10 @@ function get_smartide_tekton_images() {
       "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
   else
     docker load -i "$imageDir/tekton-dashboard_$tektonDashboardVer.tar"
+    docker tag "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
   fi
-  docker tag "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
-  docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+
 }
 
 function get_smartide_tekton_manifests() {
@@ -211,13 +214,14 @@ function get_smartide_server_images() {
       "$smartideDockerhub/smartide-cli:$smartideCliVer"
   else
     docker load -i "$imageDir/smartide-server_$smartideServerVer.tar"
+    docker tag "$smartideDockerhub/smartide-api:$smartideServerVer" "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
+    docker push "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
+    docker tag "$smartideDockerhub/smartide-web:$smartideServerVer" "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
+    docker push "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
+    docker tag "$smartideDockerhub/smartide-cli:$smartideCliVer" "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
+    docker push "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
   fi
-  docker tag "$smartideDockerhub/smartide-api:$smartideServerVer" "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
-  docker push "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
-  docker tag "$smartideDockerhub/smartide-web:$smartideServerVer" "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
-  docker push "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
-  docker tag "$smartideDockerhub/smartide-cli:$smartideCliVer" "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
-  docker push "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
+
   
   # server dependencies: phpmyadmin，mysql，busybox，redis
   logger info "download smartide server dependencies images, then upload to the local registry"
@@ -233,15 +237,16 @@ function get_smartide_server_images() {
       "$smartideDockerhub/redis:6.0.16"
   else
     docker load -i "$imageDir/smartide-server-dependencies.tar"
+    docker tag "$smartideDockerhub/phpmyadmin:5.1.1" "$dockerRegistry/smartide/phpmyadmin:5.1.1"
+    docker push "$dockerRegistry/smartide/phpmyadmin:5.1.1"
+    docker tag "$smartideDockerhub/mysql:8.0.29" "$dockerRegistry/smartide/mysql:8.0.29"
+    docker push "$dockerRegistry/smartide/mysql:8.0.29"
+    docker tag "$smartideDockerhub/busybox:1.29.3" "$dockerRegistry/smartide/busybox:1.29.3"
+    docker push "$dockerRegistry/smartide/busybox:1.29.3"
+    docker tag "$smartideDockerhub/redis:6.0.16" "$dockerRegistry/smartide/redis:6.0.16"
+    docker push "$dockerRegistry/smartide/redis:6.0.16"
   fi
-  docker tag "$smartideDockerhub/phpmyadmin:5.1.1" "$dockerRegistry/smartide/phpmyadmin:5.1.1"
-  docker push "$dockerRegistry/smartide/phpmyadmin:5.1.1"
-  docker tag "$smartideDockerhub/mysql:8.0.29" "$dockerRegistry/smartide/mysql:8.0.29"
-  docker push "$dockerRegistry/smartide/mysql:8.0.29"
-  docker tag "$smartideDockerhub/busybox:1.29.3" "$dockerRegistry/smartide/busybox:1.29.3"
-  docker push "$dockerRegistry/smartide/busybox:1.29.3"
-  docker tag "$smartideDockerhub/redis:6.0.16" "$dockerRegistry/smartide/redis:6.0.16"
-  docker push "$dockerRegistry/smartide/redis:6.0.16"
+
 }
 
 function get_smartide_server_manifests() {
