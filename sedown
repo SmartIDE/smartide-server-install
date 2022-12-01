@@ -14,6 +14,8 @@ set -o errexit
 # Docker Registry
 smartideDockerhub=registry.cn-hangzhou.aliyuncs.com/smartide
 dockerRegistry=easzlab.io.local:5000
+dockerName=
+dockerPwd=
 
 # smartide tekton image
 tektonPipelineVer=v0.32.0
