@@ -24,8 +24,13 @@ tektonDashboardVer=v0.23.0
 # smartide server image
 smartideServerVer=7182
 smartideCliVer=7111
-
-
+# smartide server config
+apiHost="https://dev.smartide.cn"
+tektonTriggerHost="http://dev.smartide.cn/tekton-trigger"
+hybridDownloadUrl="https://smartidedl.blob.core.chinacloudapi.cn"
+templateGitUrl="https://gitee.com/smartide/smartide-templates.git"
+docUrl="https://smartide.cn"
+cliVersion=2222
 
 function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
@@ -307,10 +312,10 @@ function get_smartide_sedown() {
 }
 
 function download_all() {
-  get_smartide_sedown && \
-  get_smartide_tekton_images && \
-  get_smartide_tekton_manifests && \
-  get_smartide_server_images && \
+  ## get_smartide_sedown && \
+  ## get_smartide_tekton_images && \
+  ## get_smartide_tekton_manifests && \
+  ## get_smartide_server_images && \
   get_smartide_server_manifests
 }
 
