@@ -73,7 +73,7 @@ data:
       config: 'charset=utf8mb4&parseTime=True&loc=Local'
       db-name: 'gva'
       username: 'root'
-      password: 'SmartIDE@123'
+      password: '$(DBPassword)'
       max-idle-conns: '10'
       max-open-conns: '100'
       log-mode: 'false'
@@ -154,6 +154,7 @@ data:
       tekton-task-timeout: 1200
       api-host-xtoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVVUlEIjoiMjBhOTFiNTItNmRmZi00MTRjLThmMDEtNDk4ZTlhOWM0MGIwIiwiSUQiOjEsIlVzZXJuYW1lIjoic3VwZXJBZG1pbiIsIk5pY2tOYW1lIjoi6LaF57qn566h55CG5ZGYIiwiQXV0aG9yaXR5SWQiOiI4ODgiLCJCdWZmZXJUaW1lIjozMTEwNDAwMDAsImV4cCI6MTk2NTg5NDAzNywibmJmIjoxNjUwMjczODM3fQ.3QmxJJstkcWSJp_r14VzuKTpyivFyvKMW_uvY9AzrF0
       hybrid-download-url: https://smartidedl.blob.core.chinacloudapi.cn
+      is-open-timmer: true
       tasks:
       - name: templateinit
         spec: '@hourly'
@@ -164,3 +165,4 @@ data:
         oemEnable: false
         title: SmartIDE
         doc-url: https://smartide.cn
+        cliVersion: $(cliVersion)

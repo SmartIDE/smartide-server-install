@@ -32,7 +32,7 @@ spec:
         app: gva-redis
     spec:
       containers:
-        - image: easzlab.io.local:5000/smartide/redis:6.0.16
+        - image: registry.cn-hangzhou.aliyuncs.com/smartide/redis:6.0.16
           name: gva-redis
           ports:
             - containerPort: 6379

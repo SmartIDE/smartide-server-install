@@ -64,14 +64,14 @@ spec:
 
   steps:
     - name: smartide-cli
-      image: smartide/smartide-cli:$(params.CLI_VERSION)
+      image: registry.cn-hangzhou.aliyuncs.com/smartide/smartide-cli:$(params.CLI_VERSION)
+
       script: |
         #!/bin/bash
 
         echo "hello smartide"
 
         smartide version --mode server --isInsightEnabled false
-
 
         if [ "$(params.COMMAND)" == "start" ]; then 
           echo "smartide start running"
