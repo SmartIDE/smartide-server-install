@@ -25,6 +25,7 @@ tektonDashboardVer=v0.23.0
 smartideServerVer=7182
 smartideCliVer=7111
 # smartide server config
+dbPassword=SmartIDE@123
 apiHost=https://192.168.1.1
 tektonTriggerHost=https://192.168.1.1/tekton-trigger
 hybridDownloadUrl=https://smartidedl.blob.core.chinacloudapi.cn1
@@ -340,30 +341,30 @@ function build_smartide_server_manifests() {
     ## 替换镜像地址
     sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $serverManifestsPath`
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-configmap.yaml
-    gvaServerConfigmapFilepath="$serverManifestsPath/k8s/gva-server-configmap.yaml"
-    logger info "manifest: [$gvaServerConfigmapFilepath] building..."
-    sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^      template-git-url:.*$|      template-git-url: ${templateGitUrl}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^        assets-url:.*$|        assets-url: ${assetsUrl}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^        oemEnable:.*$|        oemEnable: ${oemEnable}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^        title:.*$|        title:: ${title}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^        doc-url:.*$|        doc-url: ${docUrl}|g" $gvaServerConfigmapFilepath
-    sed -i "s|^        cliVersion:.*$|        cliVersion: ${cliVersion}|g" $gvaServerConfigmapFilepath
+    gvaServerConfigmap="$serverManifestsPath/k8s/gva-server-configmap.yaml"
+    logger info "manifest: [$gvaServerConfigmap] building..."
+    sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmap
+    sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmap
+    sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmap
+    sed -i "s|^      template-git-url:.*$|      template-git-url: ${templateGitUrl}|g" $gvaServerConfigmap
+    sed -i "s|^        assets-url:.*$|        assets-url: ${assetsUrl}|g" $gvaServerConfigmap
+    sed -i "s|^        oemEnable:.*$|        oemEnable: ${oemEnable}|g" $gvaServerConfigmap
+    sed -i "s|^        title:.*$|        title:: ${title}|g" $gvaServerConfigmap
+    sed -i "s|^        doc-url:.*$|        doc-url: ${docUrl}|g" $gvaServerConfigmap
+    sed -i "s|^        cliVersion:.*$|        cliVersion: ${cliVersion}|g" $gvaServerConfigmap
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
-    gvaServerDeploymentFilepath="$serverManifestsPath/k8s/gva-server-deployment.yaml"
-    logger info "manifest: [$gvaServerDeploymentFilepath] building..."
-    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeploymentFilepath
+    gvaServerDeployment="$serverManifestsPath/k8s/gva-server-deployment.yaml"
+    logger info "manifest: [$gvaServerDeployment] building..."
+    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeployment
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
-    gvaWebConfigmapFilepath="$serverManifestsPath/k8s/gva-web-configmap.yaml"
-    logger info "manifest: [$gvaWebConfigmapFilepath] building..."
-    sed -i "s|        listen 443 ssl|        #listen 443 ssl|g" $gvaWebConfigmapFilepath
-    sed -i "s|        ssl_certificate_key|        #ssl_certificate_key|g" $gvaWebConfigmapFilepath
-    sed -i "s|        ssl_certificate|        #ssl_certificate|g" $gvaWebConfigmapFilepath
+    gvaWebConfigmap="$serverManifestsPath/k8s/gva-web-configmap.yaml"
+    logger info "manifest: [$gvaWebConfigmap] building..."
+    sed -i "s|        listen 443 ssl|        #listen 443 ssl|g" $gvaWebConfigmap
+    sed -i "s|        ssl_certificate_key|        #ssl_certificate_key|g" $gvaWebConfigmap
+    sed -i "s|        ssl_certificate|        #ssl_certificate|g" $gvaWebConfigmap
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-deploymemt.yaml
     gvaWebDeployment="$serverManifestsPath/k8s/gva-web-deploymemt.yaml"
-    logger info "manifest: [$gvaWebConfigmapFilepath] building..."
+    logger info "manifest: [$gvaWebDeployment] building..."
     sed -i "s|  type: LoadBalancer|  type: NodePort|g" $gvaWebDeployment
     sed -i '/loadBalancerIP/ d' $gvaWebDeployment
     sed -i "/      targetPort: 8080/a\      nodePort: 8080" $gvaWebDeployment
@@ -374,7 +375,15 @@ function build_smartide_server_manifests() {
     sed -i "s|        - name: secret-volume|#        - name: secret-volume|g" $gvaWebDeployment
     sed -i "s|          secret:|#          secret:|g" $gvaWebDeployment
     sed -i "s|            secretName: nginxsecret|#            secretName: nginxsecret|g" $gvaWebDeployment
-          
+    ## 替换参数 manifests/smartide-server-deployment/k8s/myadmin-deployment.yaml
+    myadminDeployment="$serverManifestsPath/k8s/myadmin-deployment.yaml"
+    logger info "manifest: [$myadminDeployment] building..."
+    sed -i "s|  type: LoadBalancer|  type: NodePort|g" $myadminDeployment
+    sed -i '/loadBalancerIP/ d' $myadminDeployment
+    ## 替换参数 manifests/smartide-server-deployment/k8s/mysql-deployment.yaml
+    mysqlDeployment="$serverManifestsPath/k8s/mysql-deployment.yaml"
+    logger info "manifest: [$mysqlDeployment] building..."
+    sed -i "s|\$(DBPassword)|${dbPassword}|g" $mysqlDeployment      
   fi
 }
 
