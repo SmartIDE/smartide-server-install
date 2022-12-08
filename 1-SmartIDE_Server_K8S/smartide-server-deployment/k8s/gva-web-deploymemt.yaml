@@ -10,16 +10,16 @@ metadata:
     app: gva-web
     version: gva-vue3
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 20.197.100.9
+#  type: ClusterIP
   ports:
     - name: http
       port: 80
       targetPort: 8080
-      nodePort: 8080
     - name: https
       port: 443
-      targetPort: 8443
-      nodePort: 8443 
+      targetPort: 443
   selector:
     app: gva-web
     version: gva-vue3
@@ -50,7 +50,7 @@ spec:
     spec:
       containers:
         - name: gva-web
-          image: easzlab.io.local:5000/smartide/smartide-web:{smartideServerVer}
+          image: registry.cn-hangzhou.aliyuncs.com/smartide/smartide-web:$(Build.BuildId)
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 443
@@ -73,12 +73,12 @@ spec:
           volumeMounts:
             - mountPath: /etc/nginx/conf.d/
               name: nginx-config
-#            - mountPath: /etc/nginx/ssl
-#              name: secret-volume
+            - mountPath: /etc/nginx/ssl
+              name: secret-volume
       volumes:
         - name: nginx-config
           configMap:
             name: my.conf
-#        - name: secret-volume
-#          secret:
-#            secretName: nginxsecret
+        - name: secret-volume
+          secret:
+            secretName: nginxsecret

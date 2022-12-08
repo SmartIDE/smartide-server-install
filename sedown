@@ -358,7 +358,9 @@ function build_smartide_server_manifests() {
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
     gvaWebConfigmapFilepath="$serverManifestsPath/k8s/gva-web-configmap.yaml"
     logger info "manifest: [$gvaWebConfigmapFilepath] building..."
-    sed -i "s|listen 443 ssl;|#listen 443 ssl;|g" $gvaWebConfigmapFilepath   
+    sed -i "s|^[[:blank:]]*listen 443 ssl|#listen 443 ssl|g" $gvaWebConfigmapFilepath
+    sed -i "s|^[[:blank:]]*ssl_certificate_key|#ssl_certificate_key|g" $gvaWebConfigmapFilepath
+    sed -i "s|^[[:blank:]]*ssl_certificate|#ssl_certificate|g" $gvaWebConfigmapFilepath 
     
 
   fi
