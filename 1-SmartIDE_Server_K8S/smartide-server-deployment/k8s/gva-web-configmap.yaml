@@ -11,10 +11,10 @@ data:
         #charset koi8-r;
         #access_log  logs/host.access.log  main;
 
-        #listen 443 ssl;
+        listen 443 ssl;
 
-        #ssl_certificate /etc/nginx/ssl/tls.crt;
-        #ssl_certificate_key /etc/nginx/ssl/tls.key;
+        ssl_certificate /etc/nginx/ssl/tls.crt;
+        ssl_certificate_key /etc/nginx/ssl/tls.key;
 
         location / {
             root /usr/share/nginx/html;

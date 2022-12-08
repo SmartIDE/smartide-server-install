@@ -25,11 +25,14 @@ tektonDashboardVer=v0.23.0
 smartideServerVer=7182
 smartideCliVer=7111
 # smartide server config
-apiHost="https://dev.smartide.cn"
-tektonTriggerHost="http://dev.smartide.cn/tekton-trigger"
-hybridDownloadUrl="https://smartidedl.blob.core.chinacloudapi.cn"
-templateGitUrl="https://gitee.com/smartide/smartide-templates.git"
-docUrl="https://smartide.cn"
+apiHost=https://192.168.1.1
+tektonTriggerHost=https://192.168.1.1/tekton-trigger
+hybridDownloadUrl=https://smartidedl.blob.core.chinacloudapi.cn1
+templateGitUrl=https://gitee.com/smartide/smartide-templates.git1
+assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets1
+oemEnable=false1
+title=SmartIDE
+docUrl=https://smartide.cn1
 cliVersion=2222
 
 function usage() {
@@ -290,7 +293,6 @@ function deploy_smartide_server() {
     logger error "smartide server manifests are not exists"
   else
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
-    sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $serverManifestsPath`
     kubectl apply -f $serverManifestsPath/k8s/gva-server-configmap.yaml
     kubectl apply -f $serverManifestsPath/k8s/gva-server-deployment.yaml
     kubectl apply -f $serverManifestsPath/k8s/gva-web-configmap.yaml
@@ -324,6 +326,44 @@ function deploy_all() {
   deploy_smartide_server
 }
 
+function build_all_manifests() {
+  # build_smartide_tekton_manifests && \
+  build_smartide_server_manifests
+}
+
+function build_smartide_server_manifests() {
+  logger info "build smartide server manifests"
+  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
+    logger error "smartide server manifests are not exists"
+  else
+    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
+    ## 替换镜像地址
+    sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $serverManifestsPath`
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-configmap.yaml
+    gvaServerConfigmapFilepath="$serverManifestsPath/k8s/gva-server-configmap.yaml"
+    logger info "manifest: [$gvaServerConfigmapFilepath] building..."
+    sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^      template-git-url:.*$|      template-git-url: ${templateGitUrl}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^        assets-url:.*$|        assets-url: ${assetsUrl}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^        oemEnable:.*$|        oemEnable: ${oemEnable}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^        title:.*$|        title:: ${title}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^        doc-url:.*$|        doc-url: ${docUrl}|g" $gvaServerConfigmapFilepath
+    sed -i "s|^        cliVersion:.*$|        cliVersion: ${cliVersion}|g" $gvaServerConfigmapFilepath
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
+    gvaServerDeploymentFilepath="$serverManifestsPath/k8s/gva-server-deployment.yaml"
+    logger info "manifest: [$gvaServerDeploymentFilepath] building..."
+    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeploymentFilepath
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
+    gvaWebConfigmapFilepath="$serverManifestsPath/k8s/gva-web-configmap.yaml"
+    logger info "manifest: [$gvaWebConfigmapFilepath] building..."
+    sed -i "s|listen 443 ssl;|#listen 443 ssl;|g" $gvaWebConfigmapFilepath   
+    
+
+  fi
+}
+
 ### Main Lines ##################################################
 function main() {
   BASE="/etc/smartide"
@@ -337,10 +377,13 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "D" OPTION; do
+  while getopts "DKB" OPTION; do
       case "$OPTION" in
         D)
           ACTION="download_all"
+          ;;
+        B)
+          ACTION="build_all_manifests"
           ;;
         K)
           ACTION="deploy_all"
