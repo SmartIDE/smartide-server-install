@@ -44,8 +44,8 @@ spec:
             - name: MYSQL_DATABASE
               value: qmPlus
             - name: MYSQL_ROOT_PASSWORD
-              value: SmartIDE@123
-          image: reaszlab.io.local:5000:8.0.29
+              value: $(DBPassword)
+          image: registry.cn-hangzhou.aliyuncs.com/smartide/mysql:8.0.29
           imagePullPolicy: IfNotPresent
           #kubelet 使用 liveness probe（存活探针）来确定何时重启容器。例如，当应用程序处于运行状态但无法做进一步操作，liveness 探针将捕获到 deadlock，重启处于该状态下的容器，使应用程序在存在 bug 的情况下依然能够继续运行下去
           livenessProbe:
@@ -88,8 +88,8 @@ spec:
           # 此字段默认为 “File“，这意味着仅从终止消息文件中检索终止消息。 通过将 terminationMessagePolicy 设置为 “FallbackToLogsOnError“，你就可以告诉 Kubernetes，在容器因错误退出时，如果终止消息文件为空，则使用容器日志输出的最后一块作为终止消息。 日志输出限制为 2048 字节或 80 行，以较小者为准。
           terminationMessagePolicy: File
           volumeMounts:
-#            - mountPath: /var/lib/mysql
-#              name: data
+            - mountPath: /var/lib/mysql
+              name: data
             - name: mysql-config
               mountPath: /etc/my.cnf.d/my.cnf
               subPath: my.cnf
@@ -105,15 +105,15 @@ spec:
             - rm
             - -fr
             - /var/lib/mysql/lost+found
-          image: easzlab.io.local:5000/smartide/busybox:1.29.3
+          image: registry.cn-hangzhou.aliyuncs.com/smartide/busybox:1.29.3
           imagePullPolicy: IfNotPresent
           name: remove-lost-found
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
-#          volumeMounts:
-#            - mountPath: /var/lib/mysql
-#              name: data
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: data
       restartPolicy: Always
       #scheduler 是 kubernetes 的调度器，主要的任务是把定义的 pod 分配到集群的节点上。
       schedulerName: default-scheduler
@@ -123,9 +123,9 @@ spec:
       terminationGracePeriodSeconds: 30
       #定义数据卷PVC,与PV匹配。
       volumes:
-#        - name: data
-#          persistentVolumeClaim:
-#            claimName: mysql-min
+        - name: data
+          persistentVolumeClaim:
+            claimName: mysql-min
         - name: mysql-config
           configMap:
             name: mysql-config
@@ -133,32 +133,19 @@ spec:
           hostPath:
             type: File
             path: /etc/localtime
-#---
-#apiVersion: v1
-#kind: PersistentVolume
-#metadata:
-#  name: nfs-pv
-#spec:
-#  capacity:
-#    storage: 20Gi
-#  accessModes:
-#    - ReadWriteMany
-#  storageClassName: nfs
-#  nfs:
-#    server: 192.168.48.27
-#    path: "/root/smartide/mysql-data"
-#---
-#apiVersion: v1
-#kind: PersistentVolumeClaim
-#metadata:
-#  name: mysql-min
-#spec:
-#  accessModes:
-#    - ReadWriteMany
-#  storageClassName: nfs
-#  resources:
-#    requests:
-#      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-min
+  labels:
+    app: gva-mysql
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 40Gi
 ---
 apiVersion: v1
 kind: ConfigMap
