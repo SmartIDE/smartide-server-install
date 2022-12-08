@@ -11,7 +11,9 @@ spec:
       targetPort: 80
   selector:
     app: gva-myadmin
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 20.197.100.9
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -34,7 +36,7 @@ spec:
         - env:
             - name: PMA_HOST
               value: gva-mysql
-          image: easzlab.io.local:5000/smartide/phpmyadmin:5.1.1
+          image: registry.cn-hangzhou.aliyuncs.com/smartide/phpmyadmin:5.1.1
           name: gva-myadmin
           ports:
             - containerPort: 80

@@ -367,6 +367,14 @@ function build_smartide_server_manifests() {
     sed -i "s|  type: LoadBalancer|  type: NodePort|g" $gvaWebDeployment
     sed -i '/loadBalancerIP/ d' $gvaWebDeployment
     sed -i "/      targetPort: 8080/a\      nodePort: 8080" $gvaWebDeployment
+    sed -i "/      targetPort: 443/a\      nodePort: 8443" $gvaWebDeployment
+    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaWebDeployment
+    sed -i "s|            - mountPath: /etc/nginx/ssl|#            - mountPath: /etc/nginx/ssl|g" $gvaWebDeployment
+    sed -i "s|              name: secret-volume|#            name: secret-volume|g" $gvaWebDeployment
+    sed -i "s|        - name: secret-volume|#        - name: secret-volume|g" $gvaWebDeployment
+    sed -i "s|          secret:|#          secret:|g" $gvaWebDeployment
+    sed -i "s|            secretName: nginxsecret|#            secretName: nginxsecret|g" $gvaWebDeployment
+          
   fi
 }
 
