@@ -366,7 +366,7 @@ function build_smartide_server_manifests() {
     logger info "manifest: [$gvaWebConfigmapFilepath] building..."
     sed -i "s|  type: LoadBalancer|  type: NodePort|g" $gvaWebDeployment
     sed -i '/loadBalancerIP/ d' $gvaWebDeployment
-    sed -i "/      targetPort: 8080/i\      nodePort: 8080" $gvaWebDeployment
+    sed -i "/      targetPort: 8080/a\      nodePort: 8080" $gvaWebDeployment
   fi
 }
 
