@@ -43,7 +43,6 @@ assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets
 oemEnable=false
 title=SmartIDE
 docUrl=https://smartide.cn
-cliVersion=2222
 
 function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
@@ -361,7 +360,7 @@ function build_smartide_server_manifests() {
     sed -i "s|^        oemEnable:.*$|        oemEnable: ${oemEnable}|g" $gvaServerConfigmap
     sed -i "s|^        title:.*$|        title:: ${title}|g" $gvaServerConfigmap
     sed -i "s|^        doc-url:.*$|        doc-url: ${docUrl}|g" $gvaServerConfigmap
-    sed -i "s|^        cliVersion:.*$|        cliVersion: ${cliVersion}|g" $gvaServerConfigmap
+    sed -i "s|^        cliVersion:.*$|        cliVersion: ${smartideCliVer}|g" $gvaServerConfigmap
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
     gvaServerDeployment="$serverManifestsPath/k8s/gva-server-deployment.yaml"
     logger info "manifest: [$gvaServerDeployment] building..."
