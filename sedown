@@ -12,8 +12,12 @@ set -o errexit
 #set -o xtrace
 
 # Docker Registry
-smartideDockerhub=registry.cn-hangzhou.aliyuncs.com/smartide
-dockerRegistry=easzlab.io.local:5000
+smartideDockerhub=registry.cn-hangzhou.aliyuncs.com
+smartideDockerNamespace=smartide
+smartideDockerURL=$smartideDockerhub/$smartideDockerNamespace
+dockerRegistry=smartide.io.local:5000
+dockerNamespace=smartide
+dockerURL=$dockerRegistry/$dockerNamespace
 dockerName=
 dockerPwd=
 
@@ -21,19 +25,24 @@ dockerPwd=
 tektonPipelineVer=v0.32.0
 tektonTriggersVer=v0.18.0
 tektonDashboardVer=v0.23.0
+
 # smartide server image
-smartideServerVer=7182
-smartideCliVer=7111
+smartideServerVer=7273
+smartideCliVer=7251
+
+# smartide web config
+webSSL=false   #false/true
+
 # smartide server config
 dbPassword=SmartIDE@123
-apiHost=https://192.168.1.1
-tektonTriggerHost=https://192.168.1.1/tekton-trigger
-hybridDownloadUrl=https://smartidedl.blob.core.chinacloudapi.cn1
-templateGitUrl=https://gitee.com/smartide/smartide-templates.git1
-assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets1
-oemEnable=false1
+apiHost=http://192.168.1.1
+tektonTriggerHost=http://192.168.1.1/tekton-trigger
+hybridDownloadUrl=http://smartidedl.blob.core.chinacloudapi.cn
+templateGitUrl=https://gitee.com/smartide/smartide-templates.git
+assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets
+oemEnable=false
 title=SmartIDE
-docUrl=https://smartide.cn1
+docUrl=https://smartide.cn
 cliVersion=2222
 
 function usage() {
@@ -41,7 +50,8 @@ function usage() {
   cat <<EOF
   option:
     -D         download tekton && server images into "$BASE/down/smartide"
-    -K         deploy tekton && server on k8s
+    -B         build tekton && server manifest before deploy
+    -K         deploy smartide tekton && server on k8s
 EOF
 }
 
@@ -65,92 +75,169 @@ function logger() {
   esac
 }
 
+function download_all() {
+  mkdir -p "$BASE/down"
+  get_smartide_sedown && \
+  get_registry && \
+  get_smartide_tekton_images && \
+  get_smartide_server_images
+
+  mkdir -p "$BASE/manifests"
+  get_smartide_tekton_manifests && \
+  get_smartide_server_manifests
+}
+
+function get_smartide_sedown() {
+  logger info "download smartide sedown"
+  if [[ ! -f "$BASE/sedown" ]];then
+    wget -P "$BASE" \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/sedown
+  else
+    logger info "smartide sedown are already exists"
+  fi
+}
+
 function get_smartide_tekton_images() {
   logger info "download smartide tekton images, then upload to the local registry"
-  mkdir -p "$BASE/down"
 
   # tekton-pipeline
   if [[ ! -f "$imageDir/tekton-pipeline_$tektonPipelineVer.tar" ]];then
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" && \
-    docker pull "$smartideDockerhub/cloudsdktool-cloud-sdk" && \
-    docker pull "$smartideDockerhub/distroless-base" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" && \
+    docker pull "$smartideDockerURL/cloudsdktool-cloud-sdk" && \
+    docker pull "$smartideDockerURL/distroless-base" && \
     docker save -o "$imageDir/tekton-pipeline_$tektonPipelineVer.tar" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" \
-      "$smartideDockerhub/cloudsdktool-cloud-sdk" \
-      "$smartideDockerhub/distroless-base"
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" \
+      "$smartideDockerURL/cloudsdktool-cloud-sdk" \
+      "$smartideDockerURL/distroless-base"
   else
     docker load -i "$imageDir/tekton-pipeline_$tektonPipelineVer.tar"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
-    docker tag "$smartideDockerhub/cloudsdktool-cloud-sdk" "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
-    docker push "$dockerRegistry/smartide/cloudsdktool-cloud-sdk"
-    docker tag "$smartideDockerhub/distroless-base" "$dockerRegistry/smartide/distroless-base"
-    docker push "$dockerRegistry/smartide/distroless-base"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-controller:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-entrypoint:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-webhook:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-kubeconfigwriter:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-git-init:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-nop:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-imagedigestexporter:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer" "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-pipeline-cmd-pullrequest-init:$tektonPipelineVer"
+    docker tag "$smartideDockerURL/cloudsdktool-cloud-sdk" "$dockerURL/cloudsdktool-cloud-sdk"
+    docker push "$dockerURL/cloudsdktool-cloud-sdk"
+    docker tag "$smartideDockerURL/distroless-base" "$dockerURL/distroless-base"
+    docker push "$dockerURL/distroless-base"
   fi
 
 
 
   # tekton-triggers
   if [[ ! -f "$imageDir/triggers_$tektonTriggersVer.tar" ]];then
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" && \
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" && \
     docker save -o "$imageDir/tekton-triggers_$tektonTriggersVer.tar" \
-      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" \
-      "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+      "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" \
+      "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
   else
     docker load -i "$imageDir/tekton-triggers_$tektonTriggersVer.tar"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" "$dockerURL/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" "$dockerURL/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" "$dockerURL/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer" "$dockerURL/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-triggers-cmd-webhook:$tektonTriggersVer"
   fi
 
 
   # tekton-dashboard
   if [[ ! -f "$imageDir/tekton-dashboard_$tektonDashboardVer.tar" ]];then
-    docker pull "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" && \
+    docker pull "$smartideDockerURL/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" && \
     docker save -o "$imageDir/tekton-dashboard_$tektonDashboardVer.tar" \
-      "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+      "$smartideDockerURL/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
   else
     docker load -i "$imageDir/tekton-dashboard_$tektonDashboardVer.tar"
-    docker tag "$smartideDockerhub/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
-    docker push "$dockerRegistry/smartide/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+    docker tag "$smartideDockerURL/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer" "$dockerURL/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+    docker push "$dockerURL/tekton-releases-tektoncd-dashboard-cmd-dashboard:$tektonDashboardVer"
+  fi
+
+}
+
+function get_smartide_server_images() {
+  mkdir -p "$BASE/down"
+  # server
+  logger info "download smartide server images, then upload to the local registry"
+  if [[ ! -f "$imageDir/smartide-server_$smartideServerVer.tar" ]];then
+    docker pull "$smartideDockerURL/smartide-api:$smartideServerVer" && \
+    docker pull "$smartideDockerURL/smartide-web:$smartideServerVer" && \
+    docker save -o "$imageDir/smartide-server_$smartideServerVer.tar" \
+      "$smartideDockerURL/smartide-api:$smartideServerVer" \
+      "$smartideDockerURL/smartide-web:$smartideServerVer"
+  else
+    docker load -i "$imageDir/smartide-server_$smartideServerVer.tar"
+    docker tag "$smartideDockerURL/smartide-api:$smartideServerVer" "$dockerURL/smartide-api:$smartideServerVer"
+    docker push "$dockerURL/smartide-api:$smartideServerVer"
+    docker tag "$smartideDockerURL/smartide-web:$smartideServerVer" "$dockerURL/smartide-web:$smartideServerVer"
+    docker push "$dockerURL/smartide-web:$smartideServerVer"
+  fi
+
+  # cli
+  logger info "download smartide server images, then upload to the local registry"
+  if [[ ! -f "$imageDir/smartide-cli_$smartideCliVer.tar" ]];then
+    docker pull "$smartideDockerURL/smartide-cli:$smartideCliVer" && \
+    docker save -o "$imageDir/smartide-cli$smartideServerVer.tar" \
+      "$smartideDockerURL/smartide-cli:$smartideCliVer"
+  else
+    docker tag "$smartideDockerURL/smartide-cli:$smartideCliVer" "$dockerURL/smartide-cli:$smartideCliVer"
+    docker push "$dockerURL/smartide-cli:$smartideCliVer"
+  fi
+
+  
+  # server dependencies: phpmyadmin，mysql，busybox，redis
+  logger info "download smartide server dependencies images, then upload to the local registry"
+  if [[ ! -f "$imageDir/smartide-server-dependencies.tar" ]];then
+    docker pull "$smartideDockerURL/phpmyadmin:5.1.1" && \
+    docker pull "$smartideDockerURL/mysql:8.0.29" && \
+    docker pull "$smartideDockerURL/busybox:1.29.3" && \
+    docker pull "$smartideDockerURL/redis:6.0.16" && \
+    docker save -o "$imageDir/smartide-server-dependencies.tar" \
+      "$smartideDockerURL/phpmyadmin:5.1.1" \
+      "$smartideDockerURL/mysql:8.0.29" \
+      "$smartideDockerURL/busybox:1.29.3" \
+      "$smartideDockerURL/redis:6.0.16"
+  else
+    docker load -i "$imageDir/smartide-server-dependencies.tar"
+    docker tag "$smartideDockerURL/phpmyadmin:5.1.1" "$dockerURL/phpmyadmin:5.1.1"
+    docker push "$dockerURL/phpmyadmin:5.1.1"
+    docker tag "$smartideDockerURL/mysql:8.0.29" "$dockerURL/mysql:8.0.29"
+    docker push "$dockerURL/mysql:8.0.29"
+    docker tag "$smartideDockerURL/busybox:1.29.3" "$dockerURL/busybox:1.29.3"
+    docker push "$dockerURL/busybox:1.29.3"
+    docker tag "$smartideDockerURL/redis:6.0.16" "$dockerURL/redis:6.0.16"
+    docker push "$dockerURL/redis:6.0.16"
   fi
 
 }
@@ -182,10 +269,142 @@ function get_smartide_tekton_manifests() {
     wget -P $tektonManifestsPath/smartide-pipeline/aliyun \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-pipeline/aliyun/pipeline-smartide-cli.yaml
     wget -P $tektonManifestsPath \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
+  else
+    logger warn "smartide tekton manifests are already exists: [$BASE/manifests/smartide-tekton-deployment]"
+  fi
+}
+
+function get_smartide_server_manifests() {
+  logger info "download smartide server manifests"
+  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
+    mkdir -p "$BASE/manifests/smartide-server-deployment/k8s"
+    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-configmap.yaml
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-deployment.yaml
+    sed -i "s/{smartideServerVer}/$smartideServerVer/g" $serverManifestsPath/k8s/gva-server-deployment.yaml
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-web-configmap.yaml
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-web-deploymemt.yaml
+    sed -i "s/{smartideServerVer}/$smartideServerVer/g" $serverManifestsPath/k8s/gva-web-deploymemt.yaml
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/myadmin-deployment.yaml
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/mysql-deployment.yaml
+    wget -P $serverManifestsPath/k8s/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/redis-deployment.yaml
+    wget -P $serverManifestsPath \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/smartide-server-deployment.sh
   else
-    logger info "smartide tekton manifests are already exists:$BASE/manifests/smartide-tekton-deployment"
+    logger warn "smartide server manifests are already exists: [$BASE/manifests/smartide-server-deployment]"
   fi
+}
+
+function get_registry() {
+  if [[ ! -f "$imageDir/registry-2.tar" ]];then
+    docker pull "registry:2" && \
+    docker save -o "$imageDir/registry-2.tar" "registry:2"
+  fi
+}
+
+function start_local_registry() {
+  docker ps -a --format="{{ .Names }}"|grep registry > /dev/null 2>&1 && \
+  { logger warn "registry is already running"; return 0; }
+
+  if [[ ! -f "$imageDir/registry-2.tar" ]];then
+    docker pull "registry:2" && \
+    docker save -o "$imageDir/registry-2.tar" "registry:2"
+  fi
+
+  logger info "start local registry ..."
+  docker load -i "$imageDir/registry-2.tar" > /dev/null
+  mkdir -p /opt/kube/registry
+  docker run -d \
+        --name registry \
+        --network host \
+        --restart always \
+        --volume /opt/kube/registry:/var/lib/registry \
+        registry:2
+
+  sed -i "/smartide.io.local/d" /etc/hosts
+  echo "127.0.0.1  smartide.io.local" >> /etc/hosts
+}
+
+function build_all_manifests() {
+  build_smartide_tekton_manifests && \
+  build_smartide_server_manifests
+}
+
+function build_smartide_tekton_manifests() {
+  logger info "build smartide tekton manifests"
+}
+
+function build_smartide_server_manifests() {
+  logger info "build smartide server manifests"
+  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
+    logger error "smartide server manifests are not exists"
+  else
+    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
+    ## 替换镜像地址
+    sed -i "s#registry.cn-hangzhou.aliyuncs.com#$dockerRegistry#g" `grep registry.cn-hangzhou.aliyuncs.com -rl $serverManifestsPath`
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-configmap.yaml
+    gvaServerConfigmap="$serverManifestsPath/k8s/gva-server-configmap.yaml"
+    logger info "manifest: [$gvaServerConfigmap] building..."
+    sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmap
+    sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmap
+    sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmap
+    sed -i "s|^      template-git-url:.*$|      template-git-url: ${templateGitUrl}|g" $gvaServerConfigmap
+    sed -i "s|^        assets-url:.*$|        assets-url: ${assetsUrl}|g" $gvaServerConfigmap
+    sed -i "s|^        oemEnable:.*$|        oemEnable: ${oemEnable}|g" $gvaServerConfigmap
+    sed -i "s|^        title:.*$|        title:: ${title}|g" $gvaServerConfigmap
+    sed -i "s|^        doc-url:.*$|        doc-url: ${docUrl}|g" $gvaServerConfigmap
+    sed -i "s|^        cliVersion:.*$|        cliVersion: ${cliVersion}|g" $gvaServerConfigmap
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
+    gvaServerDeployment="$serverManifestsPath/k8s/gva-server-deployment.yaml"
+    logger info "manifest: [$gvaServerDeployment] building..."
+    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeployment
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
+    if [ "$webSSL" != "true" ];then
+      gvaWebConfigmap="$serverManifestsPath/k8s/gva-web-configmap.yaml"
+      logger info "manifest: [$gvaWebConfigmap] building SSL..."
+      sed -i "s|        listen 443 ssl|        #listen 443 ssl|g" $gvaWebConfigmap
+      sed -i "s|        ssl_certificate_key|        #ssl_certificate_key|g" $gvaWebConfigmap
+      sed -i "s|        ssl_certificate|        #ssl_certificate|g" $gvaWebConfigmap
+    fi
+    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-deploymemt.yaml
+    gvaWebDeployment="$serverManifestsPath/k8s/gva-web-deploymemt.yaml"
+    logger info "manifest: [$gvaWebDeployment] building..."
+    sed -i "s|  type: LoadBalancer|  type: NodePort|g" $gvaWebDeployment
+    sed -i '/loadBalancerIP/ d' $gvaWebDeployment
+    sed -i "/      targetPort: 8080/a\      nodePort: 8080" $gvaWebDeployment
+    sed -i "/      targetPort: 443/a\      nodePort: 8443" $gvaWebDeployment
+    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaWebDeployment
+    if [ "$webSSL" != "true" ];then
+      logger info "manifest: [$gvaWebDeployment] building SSL..."
+      sed -i "s|            - mountPath: /etc/nginx/ssl|#            - mountPath: /etc/nginx/ssl|g" $gvaWebDeployment
+      sed -i "s|              name: secret-volume|#            name: secret-volume|g" $gvaWebDeployment
+      sed -i "s|        - name: secret-volume|#        - name: secret-volume|g" $gvaWebDeployment
+      sed -i "s|          secret:|#          secret:|g" $gvaWebDeployment
+      sed -i "s|            secretName: nginxsecret|#            secretName: nginxsecret|g" $gvaWebDeployment
+    fi
+    ## 替换参数 manifests/smartide-server-deployment/k8s/myadmin-deployment.yaml
+    myadminDeployment="$serverManifestsPath/k8s/myadmin-deployment.yaml"
+    logger info "manifest: [$myadminDeployment] building..."
+    sed -i "s|  type: LoadBalancer|  type: NodePort|g" $myadminDeployment
+    sed -i '/loadBalancerIP/ d' $myadminDeployment
+    ## 替换参数 manifests/smartide-server-deployment/k8s/mysql-deployment.yaml
+    mysqlDeployment="$serverManifestsPath/k8s/mysql-deployment.yaml"
+    logger info "manifest: [$mysqlDeployment] building..."
+    sed -i "s|\$(DBPassword)|${dbPassword}|g" $mysqlDeployment      
+  fi
+}
+
+function deploy_all() {
+  deploy_smartide_tekton && \
+  deploy_smartide_server
 }
 
 function deploy_smartide_tekton() {
@@ -211,83 +430,6 @@ function deploy_smartide_tekton() {
   fi
 }
 
-function get_smartide_server_images() {
-  mkdir -p "$BASE/down"
-  # server
-  logger info "download smartide server images, then upload to the local registry"
-  if [[ ! -f "$imageDir/smartide-server_$smartideServerVer.tar" ]];then
-    docker pull "$smartideDockerhub/smartide-api:$smartideServerVer" && \
-    docker pull "$smartideDockerhub/smartide-web:$smartideServerVer" && \
-    docker pull "$smartideDockerhub/smartide-cli:$smartideCliVer" && \
-    docker save -o "$imageDir/smartide-server_$smartideServerVer.tar" \
-      "$smartideDockerhub/smartide-api:$smartideServerVer" \
-      "$smartideDockerhub/smartide-web:$smartideServerVer" \
-      "$smartideDockerhub/smartide-cli:$smartideCliVer"
-  else
-    docker load -i "$imageDir/smartide-server_$smartideServerVer.tar"
-    docker tag "$smartideDockerhub/smartide-api:$smartideServerVer" "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
-    docker push "$dockerRegistry/smartide/smartide-api:$smartideServerVer"
-    docker tag "$smartideDockerhub/smartide-web:$smartideServerVer" "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
-    docker push "$dockerRegistry/smartide/smartide-web:$smartideServerVer"
-    docker tag "$smartideDockerhub/smartide-cli:$smartideCliVer" "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
-    docker push "$dockerRegistry/smartide/smartide-cli:$smartideCliVer"
-  fi
-
-  
-  # server dependencies: phpmyadmin，mysql，busybox，redis
-  logger info "download smartide server dependencies images, then upload to the local registry"
-  if [[ ! -f "$imageDir/smartide-server-dependencies.tar" ]];then
-    docker pull "$smartideDockerhub/phpmyadmin:5.1.1" && \
-    docker pull "$smartideDockerhub/mysql:8.0.29" && \
-    docker pull "$smartideDockerhub/busybox:1.29.3" && \
-    docker pull "$smartideDockerhub/redis:6.0.16" && \
-    docker save -o "$imageDir/smartide-server-dependencies.tar" \
-      "$smartideDockerhub/phpmyadmin:5.1.1" \
-      "$smartideDockerhub/mysql:8.0.29" \
-      "$smartideDockerhub/busybox:1.29.3" \
-      "$smartideDockerhub/redis:6.0.16"
-  else
-    docker load -i "$imageDir/smartide-server-dependencies.tar"
-    docker tag "$smartideDockerhub/phpmyadmin:5.1.1" "$dockerRegistry/smartide/phpmyadmin:5.1.1"
-    docker push "$dockerRegistry/smartide/phpmyadmin:5.1.1"
-    docker tag "$smartideDockerhub/mysql:8.0.29" "$dockerRegistry/smartide/mysql:8.0.29"
-    docker push "$dockerRegistry/smartide/mysql:8.0.29"
-    docker tag "$smartideDockerhub/busybox:1.29.3" "$dockerRegistry/smartide/busybox:1.29.3"
-    docker push "$dockerRegistry/smartide/busybox:1.29.3"
-    docker tag "$smartideDockerhub/redis:6.0.16" "$dockerRegistry/smartide/redis:6.0.16"
-    docker push "$dockerRegistry/smartide/redis:6.0.16"
-  fi
-
-}
-
-function get_smartide_server_manifests() {
-  logger info "download smartide server manifests"
-  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
-    mkdir -p "$BASE/manifests/smartide-server-deployment/k8s"
-    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-configmap.yaml
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-server-deployment.yaml
-    sed -i "s/{smartideServerVer}/$smartideServerVer/g" $serverManifestsPath/k8s/gva-server-deployment.yaml
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-web-configmap.yaml
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/gva-web-deploymemt.yaml
-    sed -i "s/{smartideServerVer}/$smartideServerVer/g" $serverManifestsPath/k8s/gva-web-deploymemt.yaml
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/myadmin-deployment.yaml
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/mysql-deployment.yaml
-    wget -P $serverManifestsPath/k8s/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/k8s/redis-deployment.yaml
-    wget -P $serverManifestsPath \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
-  else
-    logger info "smartide server manifests are already exists:$BASE/manifests/smartide-server-deployment"
-  fi
-}
-
 function deploy_smartide_server() {
   logger info "deploy smartide server manifests"
   if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
@@ -304,89 +446,6 @@ function deploy_smartide_server() {
   fi
 }
 
-function get_smartide_sedown() {
-  logger info "download smartide sedown"
-  if [[ ! -f "$BASE/sedown" ]];then
-    wget -P "$BASE" \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/sedown
-  else
-    logger info "smartide sedown are already exists"
-  fi
-}
-
-function download_all() {
-  ## get_smartide_sedown && \
-  ## get_smartide_tekton_images && \
-  ## get_smartide_tekton_manifests && \
-  ## get_smartide_server_images && \
-  get_smartide_server_manifests
-}
-
-function deploy_all() {
-  deploy_smartide_tekton && \
-  deploy_smartide_server
-}
-
-function build_all_manifests() {
-  # build_smartide_tekton_manifests && \
-  build_smartide_server_manifests
-}
-
-function build_smartide_server_manifests() {
-  logger info "build smartide server manifests"
-  if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
-    logger error "smartide server manifests are not exists"
-  else
-    serverManifestsPath="$BASE/manifests/smartide-server-deployment"
-    ## 替换镜像地址
-    sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $serverManifestsPath`
-    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-configmap.yaml
-    gvaServerConfigmap="$serverManifestsPath/k8s/gva-server-configmap.yaml"
-    logger info "manifest: [$gvaServerConfigmap] building..."
-    sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmap
-    sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmap
-    sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmap
-    sed -i "s|^      template-git-url:.*$|      template-git-url: ${templateGitUrl}|g" $gvaServerConfigmap
-    sed -i "s|^        assets-url:.*$|        assets-url: ${assetsUrl}|g" $gvaServerConfigmap
-    sed -i "s|^        oemEnable:.*$|        oemEnable: ${oemEnable}|g" $gvaServerConfigmap
-    sed -i "s|^        title:.*$|        title:: ${title}|g" $gvaServerConfigmap
-    sed -i "s|^        doc-url:.*$|        doc-url: ${docUrl}|g" $gvaServerConfigmap
-    sed -i "s|^        cliVersion:.*$|        cliVersion: ${cliVersion}|g" $gvaServerConfigmap
-    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
-    gvaServerDeployment="$serverManifestsPath/k8s/gva-server-deployment.yaml"
-    logger info "manifest: [$gvaServerDeployment] building..."
-    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeployment
-    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
-    gvaWebConfigmap="$serverManifestsPath/k8s/gva-web-configmap.yaml"
-    logger info "manifest: [$gvaWebConfigmap] building..."
-    sed -i "s|        listen 443 ssl|        #listen 443 ssl|g" $gvaWebConfigmap
-    sed -i "s|        ssl_certificate_key|        #ssl_certificate_key|g" $gvaWebConfigmap
-    sed -i "s|        ssl_certificate|        #ssl_certificate|g" $gvaWebConfigmap
-    ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-deploymemt.yaml
-    gvaWebDeployment="$serverManifestsPath/k8s/gva-web-deploymemt.yaml"
-    logger info "manifest: [$gvaWebDeployment] building..."
-    sed -i "s|  type: LoadBalancer|  type: NodePort|g" $gvaWebDeployment
-    sed -i '/loadBalancerIP/ d' $gvaWebDeployment
-    sed -i "/      targetPort: 8080/a\      nodePort: 8080" $gvaWebDeployment
-    sed -i "/      targetPort: 443/a\      nodePort: 8443" $gvaWebDeployment
-    sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaWebDeployment
-    sed -i "s|            - mountPath: /etc/nginx/ssl|#            - mountPath: /etc/nginx/ssl|g" $gvaWebDeployment
-    sed -i "s|              name: secret-volume|#            name: secret-volume|g" $gvaWebDeployment
-    sed -i "s|        - name: secret-volume|#        - name: secret-volume|g" $gvaWebDeployment
-    sed -i "s|          secret:|#          secret:|g" $gvaWebDeployment
-    sed -i "s|            secretName: nginxsecret|#            secretName: nginxsecret|g" $gvaWebDeployment
-    ## 替换参数 manifests/smartide-server-deployment/k8s/myadmin-deployment.yaml
-    myadminDeployment="$serverManifestsPath/k8s/myadmin-deployment.yaml"
-    logger info "manifest: [$myadminDeployment] building..."
-    sed -i "s|  type: LoadBalancer|  type: NodePort|g" $myadminDeployment
-    sed -i '/loadBalancerIP/ d' $myadminDeployment
-    ## 替换参数 manifests/smartide-server-deployment/k8s/mysql-deployment.yaml
-    mysqlDeployment="$serverManifestsPath/k8s/mysql-deployment.yaml"
-    logger info "manifest: [$mysqlDeployment] building..."
-    sed -i "s|\$(DBPassword)|${dbPassword}|g" $mysqlDeployment      
-  fi
-}
-
 ### Main Lines ##################################################
 function main() {
   BASE="/etc/smartide"
@@ -400,7 +459,7 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "DKB" OPTION; do
+  while getopts "DKBR" OPTION; do
       case "$OPTION" in
         D)
           ACTION="download_all"
@@ -410,6 +469,9 @@ function main() {
           ;;
         K)
           ACTION="deploy_all"
+          ;;
+        R)
+          ACTION="start_local_registry"
           ;;        
         ?)
           usage
