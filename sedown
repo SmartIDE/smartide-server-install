@@ -149,7 +149,7 @@ function get_smartide_tekton_images() {
 
 
   # tekton-triggers
-  if [[ ! -f "$imageDir/triggers_$tektonTriggersVer.tar" ]];then
+  if [[ ! -f "$imageDir/tekton-triggers_$tektonTriggersVer.tar" ]];then
     docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-controller:$tektonTriggersVer" && \
     docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-eventlistenersink:$tektonTriggersVer" && \
     docker pull "$smartideDockerURL/tekton-releases-tektoncd-triggers-cmd-interceptors:$tektonTriggersVer" && \
@@ -207,7 +207,7 @@ function get_smartide_server_images() {
   logger info "download smartide server images, then upload to the local registry"
   if [[ ! -f "$imageDir/smartide-cli_$smartideCliVer.tar" ]];then
     docker pull "$smartideDockerURL/smartide-cli:$smartideCliVer" && \
-    docker save -o "$imageDir/smartide-cli$smartideServerVer.tar" \
+    docker save -o "$imageDir/smartide-cli_$smartideCliVer.tar" \
       "$smartideDockerURL/smartide-cli:$smartideCliVer"
   else
     docker tag "$smartideDockerURL/smartide-cli:$smartideCliVer" "$dockerURL/smartide-cli:$smartideCliVer"
@@ -339,6 +339,9 @@ function build_all_manifests() {
 
 function build_smartide_tekton_manifests() {
   logger info "build smartide tekton manifests"
+  tektonManifestsPath="$BASE/manifests/smartide-tekton-deployment"
+  ## 替换镜像地址
+  sed -i "s#registry.cn-hangzhou.aliyuncs.com#$dockerRegistry#g" `grep registry.cn-hangzhou.aliyuncs.com -rl $tektonManifestsPath`
 }
 
 function build_smartide_server_manifests() {
