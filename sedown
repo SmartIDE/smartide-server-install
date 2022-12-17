@@ -355,6 +355,7 @@ function build_smartide_server_manifests() {
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-configmap.yaml
     gvaServerConfigmap="$serverManifestsPath/k8s/gva-server-configmap.yaml"
     logger info "manifest: [$gvaServerConfigmap] building..."
+    sed -i "s|\$(DBPassword)|${dbPassword}|g" $gvaServerDeployment
     sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmap
     sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmap
     sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmap
@@ -366,8 +367,7 @@ function build_smartide_server_manifests() {
     sed -i "s|^        cliVersion:.*$|        cliVersion: ${smartideCliVer}|g" $gvaServerConfigmap
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
     gvaServerDeployment="$serverManifestsPath/k8s/gva-server-deployment.yaml"
-    logger info "manifest: [$gvaServerDeployment] building..."
-    sed -i "s|\$(DBPassword)|${dbPassword}|g" $gvaServerDeployment      
+    logger info "manifest: [$gvaServerDeployment] building..."      
     sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeployment
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
     if [ "$webSSL" != "true" ];then
