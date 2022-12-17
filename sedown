@@ -367,6 +367,7 @@ function build_smartide_server_manifests() {
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-deployment.yaml
     gvaServerDeployment="$serverManifestsPath/k8s/gva-server-deployment.yaml"
     logger info "manifest: [$gvaServerDeployment] building..."
+    sed -i "s|\$(DBPassword)|${dbPassword}|g" $gvaServerDeployment      
     sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaServerDeployment
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-web-configmap.yaml
     if [ "$webSSL" != "true" ];then
