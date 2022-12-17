@@ -341,7 +341,9 @@ function build_smartide_tekton_manifests() {
   logger info "build smartide tekton manifests"
   tektonManifestsPath="$BASE/manifests/smartide-tekton-deployment"
   ## 替换镜像地址
-  sed -i "s#registry.cn-hangzhou.aliyuncs.com#$dockerRegistry#g" `grep registry.cn-hangzhou.aliyuncs.com -rl $tektonManifestsPath`
+  if test ! -z "$(grep registry.cn-hangzhou.aliyuncs.com -rl $tektonManifestsPath)";then
+    sed -i "s#registry.cn-hangzhou.aliyuncs.com/smartide#$dockerURL#g" `grep registry.cn-hangzhou.aliyuncs.com -rl $tektonManifestsPath`
+  fi
 }
 
 function build_smartide_server_manifests() {
@@ -351,11 +353,13 @@ function build_smartide_server_manifests() {
   else
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
     ## 替换镜像地址
-    sed -i "s#registry.cn-hangzhou.aliyuncs.com#$dockerRegistry#g" `grep registry.cn-hangzhou.aliyuncs.com -rl $serverManifestsPath`
+    if test ! -z "$(grep registry.cn-hangzhou.aliyuncs.com -rl $serverManifestsPath)";then
+      sed -i "s#registry.cn-hangzhou.aliyuncs.com/smartide#$dockerURL#g" `grep registry.cn-hangzhou.aliyuncs.com -rl $serverManifestsPath`
+    fi
     ## 替换参数 manifests/smartide-server-deployment/k8s/gva-server-configmap.yaml
     gvaServerConfigmap="$serverManifestsPath/k8s/gva-server-configmap.yaml"
     logger info "manifest: [$gvaServerConfigmap] building..."
-    sed -i "s|\$(DBPassword)|${dbPassword}|g" $gvaServerDeployment
+    sed -i "s|\$(DBPassword)|${dbPassword}|g" $gvaServerConfigmap
     sed -i "s|^      api-host:.*$|      api-host: ${apiHost}|g" $gvaServerConfigmap
     sed -i "s|^      tekton-trigger-host:.*$|      tekton-trigger-host: ${tektonTriggerHost}|g" $gvaServerConfigmap
     sed -i "s|^      hybrid-download-url:.*$|      hybrid-download-url: ${hybridDownloadUrl}|g" $gvaServerConfigmap
@@ -382,7 +386,7 @@ function build_smartide_server_manifests() {
     logger info "manifest: [$gvaWebDeployment] building..."
     sed -i "s|  type: LoadBalancer|  type: NodePort|g" $gvaWebDeployment
     sed -i '/loadBalancerIP/ d' $gvaWebDeployment
-    sed -i "/      targetPort: 8080/a\      nodePort: 8080" $gvaWebDeployment
+    sed -i "/      targetPort: 8080/a\      nodePort: 8000" $gvaWebDeployment
     sed -i "/      targetPort: 443/a\      nodePort: 8443" $gvaWebDeployment
     sed -i "s|\$(Build.BuildId)|${smartideServerVer}|g" $gvaWebDeployment
     if [ "$webSSL" != "true" ];then
@@ -401,7 +405,8 @@ function build_smartide_server_manifests() {
     ## 替换参数 manifests/smartide-server-deployment/k8s/mysql-deployment.yaml
     mysqlDeployment="$serverManifestsPath/k8s/mysql-deployment.yaml"
     logger info "manifest: [$mysqlDeployment] building..."
-    sed -i "s|\$(DBPassword)|${dbPassword}|g" $mysqlDeployment      
+    sed -i "s|\$(DBPassword)|${dbPassword}|g" $mysqlDeployment
+    sed -i "/    - ReadWriteOnce/a\  storageClassName: managed-nfs-storage" $mysqlDeployment
   fi
 }
 
