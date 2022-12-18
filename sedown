@@ -11,6 +11,9 @@ set -o nounset
 set -o errexit
 #set -o xtrace
 
+# deployment mode ：公有云模式cloud，私有部署private。区别在于公有云模式使用的是LoadBalancer，私有部署使用NodePort模式
+deploymentMode=private
+
 # Docker Registry
 smartideDockerhub=registry.cn-hangzhou.aliyuncs.com
 smartideDockerNamespace=smartide
@@ -35,8 +38,8 @@ webSSL=false   #false/true
 
 # smartide server config
 dbPassword=SmartIDE@123
-apiHost=http://192.168.1.1
-tektonTriggerHost=http://192.168.1.1/tekton-trigger
+apiHost=http://10.1.0.4:8000
+tektonTriggerHost=http://10.1.0.4:8000/tekton-trigger
 hybridDownloadUrl=http://smartidedl.blob.core.chinacloudapi.cn
 templateGitUrl=https://gitee.com/smartide/smartide-templates.git
 assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets
@@ -239,6 +242,21 @@ function get_smartide_server_images() {
     docker push "$dockerURL/redis:6.0.16"
   fi
 
+  # server ingress
+  logger info "download smartide server ingress images, then upload to the local registry"
+  if [[ ! -f "$imageDir/smartide-server-ingress.tar" ]];then
+    docker pull "$smartideDockerURL/kube-webhook-certgen:v1.1.1" && \
+    docker pull "$smartideDockerURL/ingress-nginx-controller:v1.2.0" && \
+    docker save -o "$imageDir/smartide-server_ingress.tar" \
+      "$smartideDockerURL/kube-webhook-certgen:v1.1.1" \
+      "$smartideDockerURL/ingress-nginx-controller:v1.2.0"
+  else
+    docker load -i "$imageDir/smartide-server-ingress.tar"
+    docker tag "$smartideDockerURL/kube-webhook-certgen:v1.1.1" "$dockerURL/kube-webhook-certgen:v1.1.1"
+    docker push "$dockerURL/kube-webhook-certgen:v1.1.1"
+    docker tag "$smartideDockerURL/ingress-nginx-controller:v1.2.0" "$dockerURL/ingress-nginx-controller:v1.2.0"
+    docker push "$dockerURL/ingress-nginx-controller:v1.2.0"
+  fi
 }
 
 function get_smartide_tekton_manifests() {
