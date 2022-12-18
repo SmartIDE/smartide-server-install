@@ -43,7 +43,7 @@ tektonTriggerHost=http://10.1.0.4:8000/tekton-trigger
 hybridDownloadUrl=http://smartidedl.blob.core.chinacloudapi.cn
 templateGitUrl=https://gitee.com/smartide/smartide-templates.git
 assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets
-oemEnable=false
+oemEnable=true    #false/true
 title=SmartIDE
 docUrl=https://smartide.cn
 
@@ -56,6 +56,7 @@ function usage() {
     -K         deploy smartide tekton && server on k8s
     -R         run docker local registry
     -N         set smartide server by nodeport
+    -A         download static assets or deployment website with nginx
 EOF
 }
 
@@ -150,8 +151,6 @@ function get_smartide_tekton_images() {
     docker tag "$smartideDockerURL/distroless-base" "$dockerURL/distroless-base"
     docker push "$dockerURL/distroless-base"
   fi
-
-
 
   # tekton-triggers
   if [[ ! -f "$imageDir/tekton-triggers_$tektonTriggersVer.tar" ]];then
@@ -487,7 +486,45 @@ function reset_nodeport() {
   logger info "set smartide server ingress-controller with nodeport, done!"
 }
 
+function download_hybrid() {
+  mkdir -p "$BASE/down/hybrid"
+  # server
+  logger info "download smartide server images, then upload to the local registry"
+  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/goland-2022.2.3.tar.gz
+  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/ideaIU-2022.2.3.tar.gz
+  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/PhpStorm-2022.2.3.tar.gz
+  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/pycharm-professional-2022.2.3.tar.gz
+  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/RubyMine-2022.2.3.tar.gz
+  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/WebStorm-2022.2.3.tar.gz
+}
 
+function start_local_assets() {
+  if [[ ! -f "$imageDir/nginx.tar" ]];then
+    docker pull "nginx:latest" && \
+    docker save -o "$imageDir/nginx.tar" "nginx:latest"
+    ## logs assets
+    mkdir -p "$BASE/down/assets"
+    assets="assets"
+    if [ "$oemEnable" == "true" ];then
+      assets="oem"
+    fi
+    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/favicon.ico
+    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo-small.png
+    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo.png
+    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/myAvatar.png
+  else
+    logger info "start local assets nginx website: assets & hybrid ..."
+    docker load -i "$imageDir/nginx.tar" > /dev/null
+    docker run -d \
+      -p 8015:80 \
+      --name assets-nginx \
+      --restart always \
+      --volume /etc/smartide/down/hybrid:/usr/share/nginx/html/hybrid \
+      --volume /etc/smartide/down/assets:/usr/share/nginx/html/assets \
+      nginx:latest
+    logger info "start local assets nginx,the port is 8015..."
+  fi
+}
 
 ### Main Lines ##################################################
 function main() {
@@ -502,7 +539,7 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "DKBRN" OPTION; do
+  while getopts "DKBRNA" OPTION; do
       case "$OPTION" in
         D)
           ACTION="download_all"
@@ -518,7 +555,10 @@ function main() {
           ;;
         N)
           ACTION="reset_nodeport"
-          ;;      
+          ;;
+        A)
+          ACTION="start_local_assets"
+          ;;         
         ?)
           usage
           exit 1
