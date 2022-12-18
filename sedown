@@ -51,9 +51,11 @@ function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
   cat <<EOF
   option:
-    -D         download tekton && server images into "$BASE/down/smartide"
+    -D         download tekton && server images into "$BASE/down/smartide" or upload to docker local registry
     -B         build tekton && server manifest before deploy
     -K         deploy smartide tekton && server on k8s
+    -R         run docker local registry
+    -N         set smartide server by nodeport
 EOF
 }
 
@@ -476,6 +478,17 @@ function deploy_smartide_server() {
   fi
 }
 
+function reset_nodeport() {
+  logger info "set smartide server ingress-controller with nodeport"
+  serverManifestsPath="$BASE/manifests/smartide-server-deployment"
+  kubectl delete namespace smartide-ingress-nginx
+  sleep 35
+  kubectl apply -f $serverManifestsPath/ingress-controller/ingress-controller.yaml
+  logger info "set smartide server ingress-controller with nodeport, done!"
+}
+
+
+
 ### Main Lines ##################################################
 function main() {
   BASE="/etc/smartide"
@@ -489,7 +502,7 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "DKBR" OPTION; do
+  while getopts "DKBRN" OPTION; do
       case "$OPTION" in
         D)
           ACTION="download_all"
@@ -502,7 +515,10 @@ function main() {
           ;;
         R)
           ACTION="start_local_registry"
-          ;;        
+          ;;
+        N)
+          ACTION="reset_nodeport"
+          ;;      
         ?)
           usage
           exit 1
