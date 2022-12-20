@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    include: ovsx
+  datasource:
+    url: jdbc:postgresql://pgsql-server:5432/#{DATABASE}#
+    username: #{DATABASE_USERNAME}#
+    password: #{DATABASE_PASSWORD}#
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: never
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: n/a
+            client-secret: n/a
+
+management:
+  health:
+    probes:
+      enabled: true
+
+ovsx:
+  elasticsearch:
+    host: elasticsearch-server:9200
+  eclipse:
+    base-url: https://api.eclipse.org
+    publisher-agreement:
+      timezone: US/Eastern
+  webui:
+    url: #{DOMAIN}#

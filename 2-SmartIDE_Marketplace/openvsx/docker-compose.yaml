@@ -1,0 +1,76 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:12.2
+    restart: always
+    environment:
+      POSTGRES_DB: ${DATABASE}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./postgresqldata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.0
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+  pgadmin:
+    image: dpage/pgadmin4:4.18
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_USERNAME}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "8090:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    links:
+      - "db:pgsql-server"
+
+  server:
+    image: smartide/smartide-openvsx:271ca2c
+    restart: always
+    environment:
+      JVM_ARGS: "-Xms512m -Xmx2048m"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./configurations:/home/openvsx/server/config
+    links:
+      - "db:pgsql-server"
+      - "elasticsearch:elasticsearch-server"
+
+  nginx:
+    image: nginx:latest
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/ssl/
+    ports:
+      - 80:80
+      - 443:443
+    links:
+      - "server:openvsx-server"
+
+volumes:
+  pgadmin-data:
+  elasticsearch-data:

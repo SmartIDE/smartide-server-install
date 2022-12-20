@@ -14,6 +14,9 @@ set -o errexit
 # deployment mode ：公有云模式cloud，私有部署private。区别在于公有云模式使用的是LoadBalancer，私有部署使用NodePort模式
 deploymentMode=private
 
+# default settings, can be overridden by cmd line options, see usage
+DOCKER_VER=20.10.9
+
 # Docker Registry
 smartideDockerhub=registry.cn-hangzhou.aliyuncs.com
 smartideDockerNamespace=smartide
@@ -47,16 +50,26 @@ oemEnable=true    #false/true
 title=SmartIDE
 docUrl=https://smartide.cn
 
+# smartide marketplace
+MARKETPLACE_DOMAIN=http://10.1.0.4:6080
+MARKETPLACE_DATABASE=marketplace
+MARKETPLACE_DATABASE_USERNAME=smartide
+MARKETPLACE_DATABASE_PASSWORD=SmartIDE@123
+MARKETPLACE_PGADMIN_USERNAME=smartide
+MARKETPLACE_PGADMIN_PASSWORD=SmartIDE@123
+
+
 function usage() {
   echo -e "\033[33mUsage:\033[0m sedown [options] [args]"
   cat <<EOF
   option:
-    -D         download tekton && server images into "$BASE/down/smartide" or upload to docker local registry
+    -D         download tekton && server images into "$BASE/down" or upload to docker local registry
     -B         build tekton && server manifest before deploy
     -K         deploy smartide tekton && server on k8s
     -R         run docker local registry
     -N         set smartide server by nodeport
     -A         download static assets or deployment website with nginx
+    -E         install docker && docker-compose
 EOF
 }
 
@@ -82,14 +95,18 @@ function logger() {
 
 function download_all() {
   mkdir -p "$BASE/down"
-  get_smartide_sedown && \
-  get_registry && \
-  get_smartide_tekton_images && \
-  get_smartide_server_images
+  # get_smartide_sedown && \
+  # download_docker && \
+  # get_registry && \
+  # get_smartide_tekton_images && \
+  # get_smartide_server_images && \
+  # get_smartide_marketplace_images
 
-  mkdir -p "$BASE/manifests"
-  get_smartide_tekton_manifests && \
-  get_smartide_server_manifests
+  # mkdir -p "$BASE/manifests"
+  # get_smartide_tekton_manifests && \
+  # get_smartide_server_manifests
+
+  get_smartide_marketplace_files
 }
 
 function get_smartide_sedown() {
@@ -260,6 +277,27 @@ function get_smartide_server_images() {
   fi
 }
 
+function get_smartide_marketplace_images() {
+  mkdir -p "$BASE/down/marketplace"
+
+  logger info "download smartide marketplace images"
+  if [[ ! -f "$imageDir/smartide-marketplace.tar" ]];then
+    docker pull "$smartideDockerURL/postgres:12.2" && \
+    docker pull "$smartideDockerURL/elasticsearch:7.4.0" && \
+    docker pull "$smartideDockerURL/pgadmin4:4.18" && \
+    docker pull "$smartideDockerURL/smartide-openvsx:v1.0" && \
+    docker pull "$smartideDockerURL/nginx:latest" && \
+    docker save -o "$imageDir/marketplace/smartide-marketplace.tar" \
+      "$smartideDockerURL/postgres:12.2" \
+      "$smartideDockerURL/elasticsearch:7.4.0" \
+      "$smartideDockerURL/pgadmin4:4.18" \
+      "$smartideDockerURL/smartide-openvsx:v1.0" \
+      "$smartideDockerURL/nginx:latest"
+  else
+    docker load -i "$imageDir/smartide-marketplace.tar"
+  fi
+}
+
 function get_smartide_tekton_manifests() {
   logger info "download smartide tekton manifests"
   if [[ ! -d "$BASE/manifests/smartide-tekton-deployment" ]];then
@@ -322,6 +360,37 @@ function get_smartide_server_manifests() {
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/ingress-controller/ingress-controller.yaml
   else
     logger warn "smartide server manifests are already exists: [$BASE/manifests/smartide-server-deployment]"
+  fi
+}
+
+function get_smartide_marketplace_files() {
+  logger info "download smartide marketplace files"
+  if [[ ! -d "$BASE/marketplace" ]];then
+    mkdir -p "$BASE/marketplace/openvsx/configurations"
+    mkdir -p "$BASE/marketplace/openvsx/niginx"
+    wget -P $BASE/marketplace/openvsx/configurations/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/configurations/application.yml
+    wget -P $BASE/marketplace/openvsx/niginx/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/niginx/niginx.conf
+    wget -P $BASE/marketplace/openvsx/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/docker-compose.yaml
+  fi
+}
+
+function start_smartide_marketplace() {
+  logger info "start smartide marketplace"
+  if [[ ! -d "$BASE/marketplace" ]];then
+    cp -r $BASE/marketplace/openvsx ~/
+    sed -i "s|\#{DATABASE}\#|${MARKETPLACE_DATABASE}|g" ~/openvsx/configurations/application.yml
+    sed -i "s|\#{DATABASE_USERNAME}\#|${MARKETPLACE_DATABASE_USERNAME}|g" ~/openvsx/configurations/application.yml
+    sed -i "s|\#{DATABASE_PASSWORD}\#|${MARKETPLACE_DATABASE_PASSWORD}|g" ~/openvsx/configurations/application.yml
+    sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DATABASE_PASSWORD}|g" ~/openvsx/configurations/application.yml
+
+    # cd ~/openvsx
+    # docker-compose -p openvsx down
+    # docker-compose -p openvsx up -d
+  else
+    logger error "smartide marketplace files is not existed."
   fi
 }
 
@@ -526,6 +595,144 @@ function start_local_assets() {
   fi
 }
 
+function download_docker() {
+  DOCKER_URL="https://mirrors.tuna.tsinghua.edu.cn/docker-ce/linux/static/stable/x86_64/docker-${DOCKER_VER}.tgz"
+  DOCKERCOMPOSE_URL="https://smartidedl.blob.core.chinacloudapi.cn/docker/compose/releases/download/2.6.1/docker-compose-linux-x86_64"
+  DOCKERCOMPOSE_ARM_URL="https://smartidedl.blob.core.chinacloudapi.cn/docker/compose/releases/download/2.6.1/docker-compose-linux-aarch64"
+
+  if [[ -f "$BASE/down/docker-${DOCKER_VER}.tgz" ]];then
+    logger warn "docker binaries already existed"
+  else
+    logger info "downloading docker binaries, version $DOCKER_VER"
+    if [[ -e /usr/bin/wget ]];then
+      wget -c --no-check-certificate "$DOCKER_URL" || { logger error "downloading docker failed"; exit 1; }
+      wget -c --no-check-certificate "$DOCKERCOMPOSE_URL" || { logger error "downloading docker-compose failed"; exit 1; }
+      wget -c --no-check-certificate "$DOCKERCOMPOSE_ARM_URL" || { logger error "downloading docker-compose failed"; exit 1; }
+    else
+      curl -k -C- -O --retry 3 "$DOCKER_URL" || { logger error "downloading docker-compose failed"; exit 1; }
+      curl -k -C- -O --retry 3 "$DOCKERCOMPOSE_URL" || { logger error "downloading docker-compose failed"; exit 1; }
+      curl -k -C- -O --retry 3 "$DOCKERCOMPOSE_ARM_URL" || { logger error "downloading docker-compose failed"; exit 1; }
+    fi
+    /bin/mv -f "./docker-$DOCKER_VER.tgz" "$BASE/down"
+    /bin/mv -f "./docker-compose-linux-x86_64" "$BASE/down"
+    /bin/mv -f "./docker-compose-linux-aarch64" "$BASE/down"
+  fi
+}
+
+function install_docker_env() {
+  install_docker && \
+  install_dockercompose
+}
+
+function install_docker() {
+  # check if a container runtime is already installed
+  systemctl status docker|grep Active|grep -q running && { logger warn "docker is already running."; return 0; }
+
+  tar zxf "$BASE/down/docker-$DOCKER_VER.tgz" -C "$BASE/down" && \
+  /bin/cp -f "$BASE"/down/docker/* "$BASE/bin" && \
+  /bin/mv -f "$BASE"/down/docker/* /opt/kube/bin && \
+  ln -sf /opt/kube/bin/docker /bin/docker 
+
+  logger debug "generate docker service file"
+  cat > /etc/systemd/system/docker.service << EOF
+[Unit]
+Description=Docker Application Container Engine
+Documentation=http://docs.docker.io
+[Service]
+Environment="PATH=/opt/kube/bin:/bin:/sbin:/usr/bin:/usr/sbin"
+ExecStart=/opt/kube/bin/dockerd
+ExecStartPost=/sbin/iptables -P FORWARD ACCEPT
+ExecReload=/bin/kill -s HUP \$MAINPID
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Delegate=yes
+KillMode=process
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # configuration for dockerd
+  mkdir -p /etc/docker
+  DOCKER_VER_MAIN=$(echo "$DOCKER_VER"|cut -d. -f1)
+  CGROUP_DRIVER="cgroupfs"
+  ((DOCKER_VER_MAIN>=20)) && CGROUP_DRIVER="systemd"
+  logger debug "generate docker config: /etc/docker/daemon.json"
+  logger debug "prepare register mirror for $REGISTRY_MIRROR"
+  cat > /etc/docker/daemon.json << EOF
+{
+  "exec-opts": ["native.cgroupdriver=$CGROUP_DRIVER"],
+  "registry-mirrors": [
+    "https://docker.mirrors.ustc.edu.cn",
+    "http://hub-mirror.c.163.com"
+  ],
+  "max-concurrent-downloads": 10,
+  "log-driver": "json-file",
+  "log-level": "warn",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+    },
+  "data-root": "/var/lib/docker"
+}
+EOF
+
+  # docker proxy setting
+  http_proxy=${http_proxy:-}
+  HTTP_PROXY=${HTTP_PROXY:-$http_proxy}
+  https_proxy=${https_proxy:-}
+  HTTPS_PROXY=${HTTPS_PROXY:-$https_proxy}
+  USE_PROXY=0
+  CONFIG="[Service]\n"
+
+  if [[ ! -z ${HTTP_PROXY} ]]; then
+    USE_PROXY=1
+    CONFIG=${CONFIG}"Environment=HTTP_PROXY=${HTTP_PROXY}\n"
+  fi
+  if [[ ! -z ${HTTPS_PROXY} ]]; then
+    USE_PROXY=1
+    CONFIG=${CONFIG}"Environment=HTTPS_PROXY=${HTTPS_PROXY}\n"
+  fi
+  if [[ ${USE_PROXY} == 1 ]]; then
+    logger debug "generate docker service http proxy file"
+    mkdir -p /etc/systemd/system/docker.service.d
+    c=$(echo -e "$CONFIG")
+    cat > /etc/systemd/system/docker.service.d/http-proxy.conf << EOF
+${c}
+EOF
+  fi
+
+  if [[ -e /etc/centos-release || -e /etc/redhat-release ]]; then
+    logger debug "turn off selinux in CentOS/Redhat"
+    getenforce|grep Disabled || setenforce 0
+    sed -i 's/^SELINUX=.*$/SELINUX=disabled/g' /etc/selinux/config
+  fi
+
+  logger debug "enable and start docker"
+  systemctl enable docker
+  systemctl daemon-reload && systemctl restart docker && sleep 4
+}
+
+function install_dockercompose() {
+  which docker-compose >/dev/null && { logger warn "docker-compose is already installed."; return 0; }
+  arch=$(uname -m)
+  if [ "$arch" == 'arm64' ];then 
+    sudo cp $BASE/down/docker-compose-linux-aarch64 /usr/local/bin/docker-compose
+  elif [ "$arch" == 'aarch64' ];then
+    sudo cp $BASE/down/docker-compose-linux-aarch64 /usr/local/bin/docker-compose
+  elif [ "$arch" == 'x86_64' ];then
+    sudo cp $BASE/down/docker-compose-linux-x86_64 /usr/local/bin/docker-compose
+  else
+    sudo cp $BASE/down/docker-compose-linux-x86_64 /usr/local/bin/docker-compose
+  fi
+  sudo chmod +x /usr/local/bin/docker-compose
+  docker-compose --version
+}
+
+
+
 ### Main Lines ##################################################
 function main() {
   BASE="/etc/smartide"
@@ -539,7 +746,7 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "DKBRNA" OPTION; do
+  while getopts "DKBRNAEM" OPTION; do
       case "$OPTION" in
         D)
           ACTION="download_all"
@@ -558,7 +765,13 @@ function main() {
           ;;
         A)
           ACTION="start_local_assets"
-          ;;         
+          ;;
+        E)
+          ACTION="install_docker_env"
+          ;;
+        M)
+          ACTION="start_smartide_marketplace"
+          ;;
         ?)
           usage
           exit 1
