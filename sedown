@@ -372,7 +372,8 @@ function get_smartide_marketplace_files() {
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/configurations/application.yml
     wget -P $BASE/marketplace/openvsx/nginx/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/nginx/nginx.conf
-
+  else
+    logger warn "smartide marketplace files is already existed."
   fi
 }
 
