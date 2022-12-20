@@ -366,31 +366,44 @@ function get_smartide_server_manifests() {
 function get_smartide_marketplace_files() {
   logger info "download smartide marketplace files"
   if [[ ! -d "$BASE/marketplace" ]];then
-    mkdir -p "$BASE/marketplace/openvsx/configurations"
-    mkdir -p "$BASE/marketplace/openvsx/niginx"
-    wget -P $BASE/marketplace/openvsx/configurations/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/configurations/application.yml
-    wget -P $BASE/marketplace/openvsx/niginx/ \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/niginx/niginx.conf
     wget -P $BASE/marketplace/openvsx/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/docker-compose.yaml
+    wget -P $BASE/marketplace/openvsx/configurations/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/configurations/application.yml
+    wget -P $BASE/marketplace/openvsx/nginx/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/nginx/nginx.conf
+
   fi
 }
 
 function start_smartide_marketplace() {
   logger info "start smartide marketplace"
   if [[ ! -d "$BASE/marketplace" ]];then
-    cp -r $BASE/marketplace/openvsx ~/
+    logger error "smartide marketplace files is not existed."
+  else
+    cp -rf $BASE/marketplace/openvsx ~/
+
     sed -i "s|\#{DATABASE}\#|${MARKETPLACE_DATABASE}|g" ~/openvsx/configurations/application.yml
     sed -i "s|\#{DATABASE_USERNAME}\#|${MARKETPLACE_DATABASE_USERNAME}|g" ~/openvsx/configurations/application.yml
     sed -i "s|\#{DATABASE_PASSWORD}\#|${MARKETPLACE_DATABASE_PASSWORD}|g" ~/openvsx/configurations/application.yml
-    sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DATABASE_PASSWORD}|g" ~/openvsx/configurations/application.yml
+    sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DOMAIN}|g" ~/openvsx/configurations/application.yml
 
-    # cd ~/openvsx
-    # docker-compose -p openvsx down
-    # docker-compose -p openvsx up -d
-  else
-    logger error "smartide marketplace files is not existed."
+    sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DOMAIN}|g" ~/openvsx/nginx/nginx.conf
+
+    sed -i "s|\#{Docker-Registry}\#|${smartideDockerURL}|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|\#{DATABASE}\#|${MARKETPLACE_DATABASE}|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|\#{DATABASE_USERNAME}\#|${MARKETPLACE_DATABASE_USERNAME}|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|\#{DATABASE_PASSWORD}\#|${MARKETPLACE_DATABASE_PASSWORD}|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|\#{PGADMIN_USERNAME}\#|${MARKETPLACE_PGADMIN_USERNAME}|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|\#{PGADMIN_PASSWORD}\#|${MARKETPLACE_PGADMIN_USERNAME}|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|8080:8080|6100:8080|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|8090:80|6090:80|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|80:80|6080:80|g" ~/openvsx/docker-compose.yaml
+    sed -i "s|443:443|6443:443|g" ~/openvsx/docker-compose.yaml
+
+    cd ~/openvsx
+    docker-compose -p openvsx down
+    docker-compose -p openvsx up -d
   fi
 }
 
