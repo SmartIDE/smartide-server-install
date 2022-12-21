@@ -51,7 +51,8 @@ title=SmartIDE
 docUrl=https://smartide.cn
 
 # smartide marketplace
-MARKETPLACE_DOMAIN=http://10.1.0.4:6080
+MARKETPLACE_DOMAIN=20.6.11.175
+MARKETPLACE_DOMAIN_FULL=http://20.6.11.175:6800
 MARKETPLACE_DATABASE=marketplace
 MARKETPLACE_DATABASE_USERNAME=smartide
 MARKETPLACE_DATABASE_PASSWORD=SmartIDE@123
@@ -387,7 +388,7 @@ function start_smartide_marketplace() {
     sed -i "s|\#{DATABASE}\#|${MARKETPLACE_DATABASE}|g" ~/openvsx/configurations/application.yml
     sed -i "s|\#{DATABASE_USERNAME}\#|${MARKETPLACE_DATABASE_USERNAME}|g" ~/openvsx/configurations/application.yml
     sed -i "s|\#{DATABASE_PASSWORD}\#|${MARKETPLACE_DATABASE_PASSWORD}|g" ~/openvsx/configurations/application.yml
-    sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DOMAIN}|g" ~/openvsx/configurations/application.yml
+    sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DOMAIN_FULL}|g" ~/openvsx/configurations/application.yml
 
     sed -i "s|\#{DOMAIN}\#|${MARKETPLACE_DOMAIN}|g" ~/openvsx/nginx/nginx.conf
 
