@@ -325,264 +325,329 @@ spec:
   - appProtocol: http
     name: http
     port: 80
+    nodePort: 80
     protocol: TCP
     targetPort: http
   - appProtocol: https
     name: https
     port: 443
+    nodePort: 443
     protocol: TCP
     targetPort: https
   - name: p22000
     port: 22000
     targetPort: 22000
+    nodePort: 22000
     protocol: TCP
   - name: p22001
     port: 22001
     targetPort: 22001
+    nodePort: 22001
     protocol: TCP
   - name: p22002
     port: 22002
     targetPort: 22002
+    nodePort: 22002
     protocol: TCP
   - name: p22003
     port: 22003
     targetPort: 22003
+    nodePort: 22003
     protocol: TCP
   - name: p22004
     port: 22004
     targetPort: 22004
+    nodePort: 22004
     protocol: TCP
   - name: p22005
     port: 22005
     targetPort: 22005
+    nodePort: 22005
     protocol: TCP
   - name: p22006
     port: 22006
     targetPort: 22006
+    nodePort: 22006
     protocol: TCP
   - name: p22007
     port: 22007
     targetPort: 22007
+    nodePort: 22007
     protocol: TCP
   - name: p22008
     port: 22008
     targetPort: 22008
+    nodePort: 22008
     protocol: TCP
   - name: p22009
     port: 22009
     targetPort: 22009
+    nodePort: 22009
     protocol: TCP
   - name: p22010
     port: 22010
     targetPort: 22010
+    nodePort: 22010
     protocol: TCP
   - name: p22011
     port: 22011
     targetPort: 22011
+    nodePort: 22011
     protocol: TCP
   - name: p22012
     port: 22012
     targetPort: 22012
+    nodePort: 22012
     protocol: TCP
   - name: p22013
     port: 22013
     targetPort: 22013
+    nodePort: 22013
     protocol: TCP
   - name: p22014
     port: 22014
     targetPort: 22014
+    nodePort: 22014
     protocol: TCP
   - name: p22015
     port: 22015
     targetPort: 22015
+    nodePort: 22015
     protocol: TCP
   - name: p22016
     port: 22016
     targetPort: 22016
+    nodePort: 22016
     protocol: TCP
   - name: p22017
     port: 22017
     targetPort: 22017
+    nodePort: 22017
     protocol: TCP
   - name: p22018
     port: 22018
     targetPort: 22018
+    nodePort: 22018
     protocol: TCP
   - name: p22019
     port: 22019
     targetPort: 22019
+    nodePort: 22019
     protocol: TCP
   - name: p22020
     port: 22020
     targetPort: 22020
+    nodePort: 22020
     protocol: TCP
   - name: p22021
     port: 22021
     targetPort: 22021
+    nodePort: 22021
     protocol: TCP
   - name: p22022
     port: 22022
     targetPort: 22022
+    nodePort: 22022
     protocol: TCP
   - name: p22023
     port: 22023
     targetPort: 22023
+    nodePort: 22023
     protocol: TCP
   - name: p22024
     port: 22024
     targetPort: 22024
+    nodePort: 22024
     protocol: TCP
   - name: p22025
     port: 22025
     targetPort: 22025
+    nodePort: 22025
     protocol: TCP
   - name: p22026
     port: 22026
     targetPort: 22026
+    nodePort: 22026
     protocol: TCP
   - name: p22027
     port: 22027
     targetPort: 22027
+    nodePort: 22027
     protocol: TCP
   - name: p22028
     port: 22028
     targetPort: 22028
+    nodePort: 22028
     protocol: TCP
   - name: p22029
     port: 22029
     targetPort: 22029
+    nodePort: 22029
     protocol: TCP
   - name: p22030
     port: 22030
     targetPort: 22030
+    nodePort: 22030
     protocol: TCP
   - name: p22031
     port: 22031
     targetPort: 22031
+    nodePort: 22031
     protocol: TCP
   - name: p22032
     port: 22032
     targetPort: 22032
+    nodePort: 22032
     protocol: TCP
   - name: p22033
     port: 22033
     targetPort: 22033
+    nodePort: 22033
     protocol: TCP
   - name: p22034
     port: 22034
     targetPort: 22034
+    nodePort: 22034
     protocol: TCP
   - name: p22035
     port: 22035
     targetPort: 22035
+    nodePort: 22035
     protocol: TCP
   - name: p22036
     port: 22036
     targetPort: 22036
+    nodePort: 22036
     protocol: TCP
   - name: p22037
     port: 22037
     targetPort: 22037
+    nodePort: 22037
     protocol: TCP
   - name: p22038
     port: 22038
     targetPort: 22038
+    nodePort: 22038
     protocol: TCP
   - name: p22039
     port: 22039
     targetPort: 22039
+    nodePort: 22039
     protocol: TCP
   - name: p22040
     port: 22040
     targetPort: 22040
+    nodePort: 22040
     protocol: TCP
   - name: p22041
     port: 22041
     targetPort: 22041
+    nodePort: 22041
     protocol: TCP
   - name: p22042
     port: 22042
     targetPort: 22042
+    nodePort: 22042
     protocol: TCP
   - name: p22043
     port: 22043
     targetPort: 22043
+    nodePort: 22043
     protocol: TCP
   - name: p22044
     port: 22044
     targetPort: 22044
+    nodePort: 22044
     protocol: TCP
   - name: p22045
     port: 22045
     targetPort: 22045
+    nodePort: 22045
     protocol: TCP
   - name: p22046
     port: 22046
     targetPort: 22046
+    nodePort: 22046
     protocol: TCP
   - name: p22047
     port: 22047
     targetPort: 22047
+    nodePort: 22047
     protocol: TCP
   - name: p22048
     port: 22048
     targetPort: 22048
+    nodePort: 22048
     protocol: TCP
   - name: p22049
     port: 22049
     targetPort: 22049
+    nodePort: 22049
     protocol: TCP
   - name: p22050
     port: 22050
     targetPort: 22050
+    nodePort: 22050
     protocol: TCP
   - name: p22051
     port: 22051
     targetPort: 22051
+    nodePort: 22051
     protocol: TCP
   - name: p22052
     port: 22052
     targetPort: 22052
+    nodePort: 22052
     protocol: TCP
   - name: p22053
     port: 22053
     targetPort: 22053
+    nodePort: 22053
     protocol: TCP
   - name: p22054
     port: 22054
     targetPort: 22054
+    nodePort: 22054
     protocol: TCP
   - name: p22055
     port: 22055
     targetPort: 22055
+    nodePort: 22055
     protocol: TCP
   - name: p22056
     port: 22056
     targetPort: 22056
+    nodePort: 22056
     protocol: TCP
   - name: p22057
     port: 22057
     targetPort: 22057
+    nodePort: 22057
     protocol: TCP
   - name: p22058
     port: 22058
     targetPort: 22058
+    nodePort: 22058
     protocol: TCP
   - name: p22059
     port: 22059
     targetPort: 22059
+    nodePort: 22059
     protocol: TCP
   - name: p22060
     port: 22060
     targetPort: 22060
+    nodePort: 22060
     protocol: TCP
   - name: p22061
     port: 22061
     targetPort: 22061
+    nodePort: 22061
     protocol: TCP
   - name: p22062
     port: 22062
     targetPort: 22062
+    nodePort: 22062
     protocol: TCP
   - name: p22063
     port: 22063
@@ -590,151 +655,187 @@ spec:
     protocol: TCP
   - name: p22064
     port: 22064
-    targetPort: 22064
+    nodePort: 22064
     protocol: TCP
   - name: p22065
     port: 22065
     targetPort: 22065
+    nodePort: 22065
     protocol: TCP
   - name: p22066
     port: 22066
     targetPort: 22066
+    nodePort: 22066
     protocol: TCP
   - name: p22067
     port: 22067
     targetPort: 22067
+    nodePort: 22067
     protocol: TCP
   - name: p22068
     port: 22068
     targetPort: 22068
+    nodePort: 22068
     protocol: TCP
   - name: p22069
     port: 22069
     targetPort: 22069
+    nodePort: 22069
     protocol: TCP
   - name: p22070
     port: 22070
     targetPort: 22070
+    nodePort: 22070
     protocol: TCP
   - name: p22071
     port: 22071
     targetPort: 22071
+    nodePort: 22071
     protocol: TCP
   - name: p22072
     port: 22072
     targetPort: 22072
+    nodePort: 22072
     protocol: TCP
   - name: p22073
     port: 22073
     targetPort: 22073
+    nodePort: 22073
     protocol: TCP
   - name: p22074
     port: 22074
     targetPort: 22074
+    nodePort: 22074
     protocol: TCP
   - name: p22075
     port: 22075
     targetPort: 22075
+    nodePort: 22075
     protocol: TCP
   - name: p22076
     port: 22076
     targetPort: 22076
+    nodePort: 22076
     protocol: TCP
   - name: p22077
     port: 22077
     targetPort: 22077
+    nodePort: 22077
     protocol: TCP
   - name: p22078
     port: 22078
     targetPort: 22078
+    nodePort: 22078
     protocol: TCP
   - name: p22079
     port: 22079
     targetPort: 22079
+    nodePort: 22079
     protocol: TCP
   - name: p22080
     port: 22080
     targetPort: 22080
+    nodePort: 22080
     protocol: TCP
   - name: p22081
     port: 22081
     targetPort: 22081
+    nodePort: 22081
     protocol: TCP
   - name: p22082
     port: 22082
     targetPort: 22082
+    nodePort: 22082
     protocol: TCP
   - name: p22083
     port: 22083
     targetPort: 22083
+    nodePort: 22083
     protocol: TCP
   - name: p22084
     port: 22084
     targetPort: 22084
+    nodePort: 22084
     protocol: TCP
   - name: p22085
     port: 22085
     targetPort: 22085
+    nodePort: 22085
     protocol: TCP
   - name: p22086
     port: 22086
     targetPort: 22086
+    nodePort: 22086
     protocol: TCP
   - name: p22087
     port: 22087
     targetPort: 22087
+    nodePort: 22087
     protocol: TCP
   - name: p22088
     port: 22088
     targetPort: 22088
+    nodePort: 22088
     protocol: TCP
   - name: p22089
     port: 22089
     targetPort: 22089
+    nodePort: 22089
     protocol: TCP
   - name: p22090
     port: 22090
     targetPort: 22090
+    nodePort: 22090
     protocol: TCP
   - name: p22091
     port: 22091
     targetPort: 22091
+    nodePort: 22091
     protocol: TCP
   - name: p22092
     port: 22092
     targetPort: 22092
+    nodePort: 22092
     protocol: TCP
   - name: p22093
     port: 22093
     targetPort: 22093
+    nodePort: 22093
     protocol: TCP
   - name: p22094
     port: 22094
     targetPort: 22094
+    nodePort: 22094
     protocol: TCP
   - name: p22095
     port: 22095
     targetPort: 22095
+    nodePort: 22095
     protocol: TCP
   - name: p22096
     port: 22096
     targetPort: 22096
+    nodePort: 22096
     protocol: TCP
   - name: p22097
     port: 22097
     targetPort: 22097
+    nodePort: 22097
     protocol: TCP
   - name: p22098
     port: 22098
     targetPort: 22098
+    nodePort: 22098
     protocol: TCP
   - name: p22099
     port: 22099
     targetPort: 22099
+    nodePort: 22099
     protocol: TCP
   - name: p22100
     port: 22100
     targetPort: 22100
+    nodePort: 22100
     protocol: TCP
   selector:
     app.kubernetes.io/component: controller
