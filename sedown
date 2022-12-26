@@ -5,7 +5,7 @@
 # @author:   jilibin
 # @usage:    ./sedown
 #--------------------------------------------------
-version=v1.0.4
+version=v1.0.5
 echo "version:$version"
 set -o nounset
 set -o errexit
@@ -43,16 +43,16 @@ webSSL=false   #false/true
 dbPassword=SmartIDE@123
 apiHost=http://10.1.0.4:8000
 tektonTriggerHost=http://10.1.0.4:8000/tekton-trigger
-hybridDownloadUrl=http://smartidedl.blob.core.chinacloudapi.cn
+hybridDownloadUrl=http://20.195.44.31:6800/hybrid
 templateGitUrl=https://gitee.com/smartide/smartide-templates.git
-assetsUrl=https://smartidedl.blob.core.chinacloudapi.cn/assets
-oemEnable=true    #false/true
+assetsUrl=http://20.195.44.31:6800/assets
+oemEnable=false    #false/true
 title=SmartIDE
 docUrl=https://smartide.cn
 
 # smartide marketplace
-MARKETPLACE_DOMAIN=20.6.11.175
-MARKETPLACE_DOMAIN_FULL=http://20.6.11.175:6800
+MARKETPLACE_DOMAIN=20.195.44.31
+MARKETPLACE_DOMAIN_FULL=http://20.195.44.31:6800
 MARKETPLACE_DATABASE=marketplace
 MARKETPLACE_DATABASE_USERNAME=smartide
 MARKETPLACE_DATABASE_PASSWORD=SmartIDE@123
@@ -101,13 +101,15 @@ function download_all() {
   # get_registry && \
   # get_smartide_tekton_images && \
   # get_smartide_server_images && \
+  get_smartide_dev_images ##&& \
   # get_smartide_marketplace_images
+  
 
   # mkdir -p "$BASE/manifests"
   # get_smartide_tekton_manifests && \
   # get_smartide_server_manifests
 
-  get_smartide_marketplace_files
+  # get_smartide_marketplace_files
 }
 
 function get_smartide_sedown() {
@@ -275,6 +277,32 @@ function get_smartide_server_images() {
     docker push "$dockerURL/kube-webhook-certgen:v1.1.1"
     docker tag "$smartideDockerURL/ingress-nginx-controller:v1.2.0" "$dockerURL/ingress-nginx-controller:v1.2.0"
     docker push "$dockerURL/ingress-nginx-controller:v1.2.0"
+  fi
+}
+
+function get_smartide_dev_images() {
+  if [[ ! -d "$imageDir/dev-images" ]];then
+    logger info "download smartide dev images"
+    mkdir -p "$imageDir/dev-images"
+    wget -P $imageDir/dev-images/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/dev-images-list.txt
+    while read image_url; do
+      docker pull $image_url
+      image_name=$(cut -d/ -f3 <<< $image_url)
+      tar_file=$(sed 's/:/_/' <<< "$image_name").tar
+      logger info "saving $imageDir/dev-images/$tar_file"
+      docker save -o $imageDir/dev-images/$tar_file $image_url
+    done < $imageDir/dev-images/dev-images-list.txt
+  else
+    while read tar_file; do
+      docker load -i "$tar_file"
+    done < <(find $imageDir/dev-images -name "*.tar")
+
+    while read image_url; do
+      image_name=$(cut -d/ -f3 <<< $image_url)
+      docker tag $image_url $dockerURL/"$image_name"
+      docker push $dockerURL/"$image_name"
+    done < $imageDir/dev-images/dev-images-list.txt
   fi
 }
 
@@ -596,6 +624,7 @@ function start_local_assets() {
     wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo-small.png
     wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo.png
     wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/myAvatar.png
+    download_hybrid
   else
     logger info "start local assets nginx website: assets & hybrid ..."
     docker load -i "$imageDir/nginx.tar" > /dev/null
