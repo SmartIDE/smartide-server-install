@@ -1,4 +1,1 @@
-registry.cn-hangzhou.aliyuncs.com/smartide/smartide-node-v2:latest
-registry.cn-hangzhou.aliyuncs.com/smartide/smartide-node-v2-vmlc:latest
-registry.cn-hangzhou.aliyuncs.com/smartide/smartide-java-v2:latest
-registry.cn-hangzhou.aliyuncs.com/smartide/smartide-java-v2-vmlc:latest
+registry.cn-hangzhou.aliyuncs.com/smartide/smartide-node-v2-vscode:all-version
