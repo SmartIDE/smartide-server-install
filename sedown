@@ -97,20 +97,20 @@ function logger() {
 function download_all() {
   mkdir -p "$BASE/down"
   get_smartide_sedown && \
-  # download_docker && \
-  # get_registry && \
-  # get_smartide_tekton_images && \
-  # get_smartide_server_images && \
-  # get_smartide_dev_images && \
+  download_docker && \
+  get_registry && \
+  get_smartide_tekton_images && \
+  get_smartide_server_images && \
+  get_smartide_dev_images && \
   get_smartide_sysbox
-  # get_smartide_marketplace_images
+  get_smartide_marketplace_images
   
 
   mkdir -p "$BASE/manifests"
   get_smartide_tekton_manifests && \
   get_smartide_server_manifests
 
-  # get_smartide_marketplace_files
+  get_smartide_marketplace_files
 }
 
 function get_smartide_sedown() {
@@ -645,8 +645,8 @@ function download_hybrid() {
     wget -P $BASE/assets/hybrid/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/hybrid-list.txt
     while read url; do
-      wget -P $BASE/down/hybrid/ $url
-    done < $$BASE/assets/hybrid/hybrid-list.txt
+      wget -P $BASE/assets/hybrid/ $url
+    done < $BASE/assets/hybrid/hybrid-list.txt
   else
     logger warn "smartide hybrid tar.gz is already existed."
   fi
@@ -654,10 +654,9 @@ function download_hybrid() {
 
 function down_or_start_local_assets() {
   if [[ ! -d "$BASE/assets" ]];then
+    mkdir -p "$BASE/assets/assets"
     docker pull "nginx:latest" && \
     docker save -o "$BASE/assets/nginx.tar" "nginx:latest"
-    ## logs assets
-    mkdir -p "$BASE/assets/assets"
     assets="assets"
     if [ "$oemEnable" == "true" ];then
       assets="oem"
