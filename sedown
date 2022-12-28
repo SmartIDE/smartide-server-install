@@ -639,41 +639,43 @@ function reset_nodeport() {
 }
 
 function download_hybrid() {
-  mkdir -p "$BASE/down/hybrid"
-  # server
-  logger info "download smartide server images, then upload to the local registry"
-  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/goland-2022.2.3.tar.gz
-  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/ideaIU-2022.2.3.tar.gz
-  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/PhpStorm-2022.2.3.tar.gz
-  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/pycharm-professional-2022.2.3.tar.gz
-  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/RubyMine-2022.2.3.tar.gz
-  wget -P $BASE/down/hybrid/ https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/WebStorm-2022.2.3.tar.gz
+  if [[ ! -d "$BASE/assets/hybrid" ]];then
+    logger info "download smartide hybrid resource."
+    mkdir -p "$BASE/assets/hybrid"
+    wget -P $BASE/assets/hybrid/ \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/hybrid-list.txt
+    while read url; do
+      wget -P $BASE/down/hybrid/ $url
+    done < $$BASE/assets/hybrid/hybrid-list.txt
+  else
+    logger warn "smartide hybrid tar.gz is already existed."
+  fi
 }
 
 function start_local_assets() {
-  if [[ ! -f "$imageDir/nginx.tar" ]];then
+  if [[ ! -d "$BASE/assets" ]];then
     docker pull "nginx:latest" && \
-    docker save -o "$imageDir/nginx.tar" "nginx:latest"
+    docker save -o "$BASE/assets/nginx.tar" "nginx:latest"
     ## logs assets
-    mkdir -p "$BASE/down/assets"
+    mkdir -p "$BASE/assets/assets"
     assets="assets"
     if [ "$oemEnable" == "true" ];then
       assets="oem"
     fi
-    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/favicon.ico
-    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo-small.png
-    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo.png
-    wget -P $BASE/down/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/myAvatar.png
+    wget -P $BASE/assets/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/favicon.ico
+    wget -P $BASE/assets/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo-small.png
+    wget -P $BASE/assets/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/logo.png
+    wget -P $BASE/assets/assets/ https://smartidedl.blob.core.chinacloudapi.cn/$assets/myAvatar.png
     download_hybrid
   else
     logger info "start local assets nginx website: assets & hybrid ..."
-    docker load -i "$imageDir/nginx.tar" > /dev/null
+    docker load -i "$BASE/assets/nginx.tar" > /dev/null
     docker run -d \
       -p 8015:80 \
       --name assets-nginx \
       --restart always \
-      --volume /etc/smartide/down/hybrid:/usr/share/nginx/html/hybrid \
-      --volume /etc/smartide/down/assets:/usr/share/nginx/html/assets \
+      --volume /etc/smartide/assets/hybrid:/usr/share/nginx/html/hybrid \
+      --volume /etc/smartide/assets/assets:/usr/share/nginx/html/assets \
       nginx:latest
     logger info "start local assets nginx,the port is 8015..."
   fi

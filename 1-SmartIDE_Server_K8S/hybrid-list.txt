@@ -1,0 +1,6 @@
+https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/goland-2022.2.3.tar.gz
+https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/ideaIU-2022.2.3.tar.gz
+https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/PhpStorm-2022.2.3.tar.gz
+https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/pycharm-professional-2022.2.3.tar.gz
+https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/RubyMine-2022.2.3.tar.gz
+https://smartidedl.blob.core.chinacloudapi.cn/hybrid/jetbrains/WebStorm-2022.2.3.tar.gz
