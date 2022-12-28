@@ -842,7 +842,7 @@ function main() {
           ACTION="deploy_all"
           ;;
         R)
-          ACTION="start_or_download_local_registry"
+          ACTION="start_local_registry"
           ;;
         N)
           ACTION="reset_nodeport"
