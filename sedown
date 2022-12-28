@@ -456,9 +456,16 @@ function start_smartide_marketplace() {
 }
 
 function get_registry() {
-  if [[ ! -f "$imageDir/registry-2.tar" ]];then
+  if [[ ! -d "$BASE/registry" ]];then
+    mkdir -p "$BASE/registry"
     docker pull "registry:2" && \
-    docker save -o "$imageDir/registry-2.tar" "registry:2"
+    docker save -o "$BASE/registry/registry-2.tar" "registry:2"
+    wget -P $BASE/registry/certs \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/3-SmartIDE_Install_Toolkit/registry/certs/smartide.io.local.crt
+    wget -P $BASE/registry/certs \
+      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/3-SmartIDE_Install_Toolkit/registry/certs/smartide.io.local.key
+  else
+    logger warn "$BASE/registry is already existed";
   fi
 }
 
@@ -467,32 +474,26 @@ function start_local_registry() {
   { logger warn "registry is already running"; return 0; }
 
   if [[ ! -d "$BASE/registry" ]];then
-    mkdir "$BASE/registry"
-    docker pull "registry:2" && \
-    docker save -o "$BASE/registry/registry-2.tar" "registry:2"
-    wget -P $BASE/registry/certs \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/3-SmartIDE_Install_Toolkit/registry/certs/smartide.io.local.crt
-    wget -P $BASE/registry/certs \
-      https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/3-SmartIDE_Install_Toolkit/registry/certs/smartide.io.local.key
+    logger warn "$BASE/registry is not existed";
+  else
+    logger info "start local registry ..."
+    docker load -i "$BASE/registry/registry-2.tar" > /dev/null
+    mkdir -p /opt/kube/registry
+    docker run -d \
+          --name registry \
+          --network host \
+          --restart always \
+          --memory 512m \
+          --memory-swap -1 \
+          -v /opt/kube/registry:/var/lib/registry \
+          -v $BASE/registry/certs:/etc/cert.d \
+          -e REGISTRY_HTTP_TLS_CERTIFICATE=/etc/cert.d/smartide.io.local.crt \
+          -e REGISTRY_HTTP_TLS_KEY=/etc/cert.d/smartide.io.local.key \
+          registry:2
+
+    sed -i "/smartide.io.local/d" /etc/hosts
+    echo "127.0.0.1 smartide.io.local" >> /etc/hosts
   fi
-
-  logger info "start local registry ..."
-  docker load -i "$BASE/registry/registry-2.tar" > /dev/null
-  mkdir -p /opt/kube/registry
-  docker run -d \
-        --name registry \
-        --network host \
-        --restart always \
-        --memory 512m \
-        --memory-swap -1 \
-        -v /opt/kube/registry:/var/lib/registry \
-        -v $BASE/registry/certs:/etc/cert.d \
-        -e REGISTRY_HTTP_TLS_CERTIFICATE=/etc/cert.d/smartide.io.local.crt \
-        -e REGISTRY_HTTP_TLS_KEY=/etc/cert.d/smartide.io.local.key \
-        registry:2
-
-  sed -i "/smartide.io.local/d" /etc/hosts
-  echo "127.0.0.1  smartide.io.local" >> /etc/hosts
 }
 
 function build_all_manifests() {
@@ -841,7 +842,7 @@ function main() {
           ACTION="deploy_all"
           ;;
         R)
-          ACTION="start_local_registry"
+          ACTION="start_or_download_local_registry"
           ;;
         N)
           ACTION="reset_nodeport"
