@@ -69,7 +69,7 @@ function usage() {
     -K         deploy smartide tekton && server on k8s
     -R         run docker local registry
     -N         set smartide server by nodeport
-    -A         download static assets or deployment website with nginx
+    -A         download static assets(include hybrid resource) or deployment website with nginx
     -E         install docker && docker-compose
 EOF
 }
@@ -652,7 +652,7 @@ function download_hybrid() {
   fi
 }
 
-function start_local_assets() {
+function down_or_start_local_assets() {
   if [[ ! -d "$BASE/assets" ]];then
     docker pull "nginx:latest" && \
     docker save -o "$BASE/assets/nginx.tar" "nginx:latest"
@@ -850,7 +850,7 @@ function main() {
           ACTION="reset_nodeport"
           ;;
         A)
-          ACTION="start_local_assets"
+          ACTION="down_or_start_local_assets"
           ;;
         E)
           ACTION="install_docker_env"
