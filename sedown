@@ -71,6 +71,7 @@ function usage() {
     -N         set smartide server by nodeport
     -A         download static assets(include hybrid resource) or deployment website with nginx
     -E         install docker && docker-compose
+    -S         deploy vmlc feature(sysbox)
 EOF
 }
 
@@ -119,7 +120,7 @@ function get_smartide_sedown() {
     wget -P "$BASE" \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/sedown
   else
-    logger info "smartide sedown are already exists"
+    logger info "smartide sedown are already existed:"
   fi
 }
 
@@ -321,10 +322,10 @@ function get_smartide_sysbox() {
 }
 
 function get_smartide_marketplace_images() {
-  mkdir -p "$BASE/down/marketplace"
+  mkdir -p "$imageDir/marketplace"
 
   logger info "download smartide marketplace images"
-  if [[ ! -f "$imageDir/smartide-marketplace.tar" ]];then
+  if [[ ! -f "$imageDir/marketplace/smartide-marketplace.tar" ]];then
     docker pull "$smartideDockerURL/postgres:12.2" && \
     docker pull "$smartideDockerURL/elasticsearch:7.4.0" && \
     docker pull "$smartideDockerURL/pgadmin4:4.18" && \
@@ -337,7 +338,7 @@ function get_smartide_marketplace_images() {
       "$smartideDockerURL/smartide-openvsx:v1.0" \
       "$smartideDockerURL/nginx:latest"
   else
-    docker load -i "$imageDir/smartide-marketplace.tar"
+    docker load -i "$imageDir/marketplace/smartide-marketplace.tar"
   fi
 }
 
@@ -370,7 +371,7 @@ function get_smartide_tekton_manifests() {
     wget -P $tektonManifestsPath \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-tekton-deployment/smartide-tekton-deployment.sh
   else
-    logger warn "smartide tekton manifests are already exists: [$BASE/manifests/smartide-tekton-deployment]"
+    logger warn "smartide tekton manifests are already existed: [$BASE/manifests/smartide-tekton-deployment]"
   fi
 }
 
@@ -406,7 +407,7 @@ function get_smartide_server_manifests() {
     wget -P $serverManifestsPath/sysbox/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/1-SmartIDE_Server_K8S/smartide-server-deployment/sysbox/sysbox-install.yaml  
   else
-    logger warn "smartide server manifests are already exists: [$BASE/manifests/smartide-server-deployment]"
+    logger warn "smartide server manifests are already existed: [$BASE/manifests/smartide-server-deployment]"
   fi
 }
 
@@ -420,7 +421,7 @@ function get_smartide_marketplace_files() {
     wget -P $BASE/marketplace/openvsx/nginx/ \
       https://raw.githubusercontent.com/SmartIDE/smartide-server-install/master/2-SmartIDE_Marketplace/openvsx/nginx/nginx.conf
   else
-    logger warn "smartide marketplace files is already existed."
+    logger warn "smartide marketplace files is already existed: [$BASE/marketplace]"
   fi
 }
 
@@ -486,9 +487,10 @@ function start_local_registry() {
           --memory 512m \
           --memory-swap -1 \
           -v /opt/kube/registry:/var/lib/registry \
-          -v $BASE/registry/certs:/etc/cert.d \
-          -e REGISTRY_HTTP_TLS_CERTIFICATE=/etc/cert.d/smartide.io.local.crt \
-          -e REGISTRY_HTTP_TLS_KEY=/etc/cert.d/smartide.io.local.key \
+          # 自签名证书客户端无法获取，报证书错误
+          # -v $BASE/registry/certs:/etc/cert.d \
+          # -e REGISTRY_HTTP_TLS_CERTIFICATE=/etc/cert.d/smartide.io.local.crt \
+          # -e REGISTRY_HTTP_TLS_KEY=/etc/cert.d/smartide.io.local.key \
           registry:2
 
     sed -i "/smartide.io.local/d" /etc/hosts
@@ -513,7 +515,7 @@ function build_smartide_tekton_manifests() {
 function build_smartide_server_manifests() {
   logger info "build smartide server manifests"
   if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
-    logger error "smartide server manifests are not exists"
+    logger error "smartide server manifests are not existed"
   else
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
     ## 替换镜像地址
@@ -582,7 +584,7 @@ function deploy_all() {
 function deploy_smartide_tekton() {
   logger info "deploy smartide tekton manifests"
   if [[ ! -d "$BASE/manifests/smartide-tekton-deployment" ]];then
-    logger error "smartide tekton manifests are not exists"
+    logger error "smartide tekton manifests are not existed"
   else
     tektonManifestsPath="$BASE/manifests/smartide-tekton-deployment"
     sed -i "s#easzlab.io.local:5000#$dockerRegistry#g" `grep easzlab.io.local:5000 -rl $tektonManifestsPath`
@@ -605,7 +607,7 @@ function deploy_smartide_tekton() {
 function deploy_smartide_server() {
   logger info "deploy smartide server manifests"
   if [[ ! -d "$BASE/manifests/smartide-server-deployment" ]];then
-    logger error "smartide server manifests are not exists"
+    logger error "smartide server manifests are not existed"
   else
     serverManifestsPath="$BASE/manifests/smartide-server-deployment"
     kubectl apply -f $serverManifestsPath/k8s/gva-server-configmap.yaml
@@ -621,10 +623,10 @@ function deploy_smartide_server() {
 function deploy_smartide_sysbox() {
   logger info "deploy smartide sysbox manifests"
   if [[ ! -d "$BASE/manifests/smartide-server-deployment/sysbox" ]];then
-    logger error "smartide sysbox manifests are not exists"
+    logger error "smartide sysbox manifests are not existed"
   else
     ## 获取node类型的节点，在节点上添加 sysbox-install=yes 的 label
-    kubectl get nodes -l kubernetes.io/role=node -o jsonpath='{.items[*].metadata.name}'| xargs -I {} kubectl label node {} sysbox-install=yes
+    kubectl get nodes -l kubernetes.io/role=node -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n'| xargs -I {} kubectl label node {} sysbox-install=yes
     kubectl apply -f $BASE/manifests/smartide-server-deployment/sysbox/sysbox-install.yaml
   fi
 }
@@ -831,7 +833,7 @@ function main() {
   [[ "$#" -eq 0 ]] && { usage >&2; exit 1; }
   
   ACTION=""
-  while getopts "DKBRNAEM" OPTION; do
+  while getopts "DKBRNAEMS" OPTION; do
       case "$OPTION" in
         D)
           ACTION="download_all"
